@@ -13,19 +13,39 @@ import { MIN_PASSWORD_LENGTH, sealToken } from '../src/lib/vault.ts'
 
 const OUT = resolve(import.meta.dirname, '../public/vault.json')
 
+// 질문마다 인터페이스를 새로 만들면 버퍼에 남아 있던 입력까지 같이 사라진다. 하나만 쓴다.
+// 파이프로 넘어온 입력에 terminal:true 를 쓰면 두 번째 질문에서 멈춘다.
+const rl = createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  terminal: process.stdin.isTTY === true,
+})
+rl.muted = false
+rl._writeToOutput = (str) => {
+  if (!rl.muted) rl.output.write(str)
+}
+
+// 파이프로 넘어오면 줄이 한꺼번에 도착한다. 먼저 받아 쌓아두고 질문할 때 하나씩 꺼낸다.
+const pending = []
+const waiting = []
+rl.on('line', (line) => {
+  const waiter = waiting.shift()
+  if (waiter) waiter(line)
+  else pending.push(line)
+})
+
 function ask(query, hidden = false) {
   return new Promise((done) => {
-    const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: true })
-    rl.muted = false
-    rl._writeToOutput = (str) => {
-      if (!rl.muted) rl.output.write(str)
-    }
-    rl.question(query, (answer) => {
-      rl.close()
-      if (hidden) process.stdout.write('\n')
-      done(answer.trim())
-    })
+    const next = pending.shift()
+    if (next !== undefined) return done(next.trim())
+
+    process.stdout.write(query)
     rl.muted = hidden
+    waiting.push((line) => {
+      rl.muted = false
+      if (hidden && rl.terminal) process.stdout.write('\n')
+      done(line.trim())
+    })
   })
 }
 
@@ -51,6 +71,8 @@ if (!process.env.SEAL_PASSWORD) {
     process.exit(1)
   }
 }
+
+rl.close()
 
 const vault = await sealToken(token, password)
 await mkdir(resolve(import.meta.dirname, '../public'), { recursive: true })
