@@ -12,6 +12,7 @@
 id: instagram-hook-teardown
 title: 인스타 훅 구조 분해
 rank: a0
+category: content
 tags: [instagram, copywriting]
 sources:
   - url: https://www.instagram.com/reel/XXXX/
@@ -34,7 +35,8 @@ published_at: null
 | `title` | ✅ | 사람이 읽는 제목. 한글 자유롭게 |
 | `rank` | ✅ | 컬럼 안에서의 정렬 키. 새로 만들 때는 `a0`으로 두면 된다. 사이트에서 드래그하면 알아서 다시 매겨진다 |
 | `researched_at` | ✅ | 리서치를 끝낸 시각. ISO 8601 UTC (`2026-09-01T01:00:00Z`). 날짜만(`2026-09-01`) 써도 그날 자정으로 읽는다 |
-| `tags` | | 문자열 배열. 없으면 생략하거나 `[]` |
+| `category` | | 분류 하나. `agent`(에이전트) · `automation`(자동화) · `content`(콘텐츠) · `business`(사업 아이디어) · `market`(시장 인사이트) 중 하나. 애매하면 비워 두면 '미분류'로 들어간다. **목록에 없는 값을 쓰면 CI가 실패한다** |
+| `tags` | | 자유로운 문자열 배열. 분류와 달리 아무 말이나 써도 된다. 없으면 생략하거나 `[]` |
 | `sources` | | 리서치를 촉발한 원본 목록. `url` 필수, `type`은 `reel`·`carousel`·`article`·`video`·`link` 중 하나(기본 `link`), `title`은 선택 |
 | `post_url` | | 발행한 블로그 글 주소. 아직 없으면 `null` |
 | `executed_at` | | 실제로 해본 시점. 아직이면 `null` |

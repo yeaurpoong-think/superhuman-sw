@@ -17,6 +17,19 @@ export const SourceSchema = z.looseObject({
   title: z.string().optional(),
 })
 
+/** 리서치를 갈라 보는 분류. 하나만 고른다. */
+export const CATEGORIES = ['agent', 'automation', 'content', 'business', 'market'] as const
+
+export type Category = (typeof CATEGORIES)[number]
+
+export const CATEGORY_LABELS: Record<Category, string> = {
+  agent: '에이전트',
+  automation: '자동화',
+  content: '콘텐츠',
+  business: '사업 아이디어',
+  market: '시장 인사이트',
+}
+
 /** 계약에 없는 키는 버리지 않고 그대로 보존한다. 에이전트가 남긴 메모를 앱이 삼키면 안 된다. */
 export const ProjectSchema = z.looseObject({
   id: z.string().regex(/^[a-z0-9][a-z0-9-]*$/, 'id는 소문자·숫자·하이픈만 쓴다'),
@@ -24,6 +37,7 @@ export const ProjectSchema = z.looseObject({
   rank: z.string().min(1),
   tags: z.array(z.string()).default([]),
   sources: z.array(SourceSchema).default([]),
+  category: z.enum(CATEGORIES).nullable().default(null),
   post_url: z.url().nullable().default(null),
   researched_at: instant,
   executed_at: instant.nullable().default(null),
@@ -91,6 +105,16 @@ export function averageLeadTimeDays(list: Timestamps[]): number | null {
   if (spans.length === 0) return null
   const mean = spans.reduce((a, b) => a + b, 0) / spans.length
   return Math.round(mean * 10) / 10
+}
+
+/** 분류로 걸러낸다. 'all'은 전부, 'none'은 아직 분류하지 않은 것. */
+export function filterByCategory<T extends { category?: Category | null }>(
+  list: T[],
+  filter: Category | 'all' | 'none',
+): T[] {
+  if (filter === 'all') return list
+  if (filter === 'none') return list.filter((p) => !p.category)
+  return list.filter((p) => p.category === filter)
 }
 
 /** rank가 없거나 같을 때도 순서가 흔들리지 않게 id로 갈라준다. */

@@ -96,7 +96,8 @@ instaloader가 막혔을 때. 페이지를 열고 로그인 유도 팝업을 닫
 1. `content/projects/<id>.md` 를 [`CONTRACT.md`](./CONTRACT.md) 형식으로 만든다
 2. `researched_at`에 지금 시각을 넣고 `executed_at`·`published_at`은 `null`로 둔다 → '리서치 완료' 칸에 카드가 생긴다
 3. `sources`에 원본 링크와 타입을 넣는다
-4. `npm run validate`로 형식을 확인하고 `main`에 커밋·푸시한다
+4. `category`를 고른다 — `agent` · `automation` · `content` · `business` · `market`. 애매하면 비워 둔다. 억지로 끼워 맞추지 마라
+5. `npm run validate`로 형식을 확인하고 `main`에 커밋·푸시한다
 
 섹션 구조(요약·인사이트·가이드·주의사항)는 노션에 쓰던 것을 그대로 유지한다.
 

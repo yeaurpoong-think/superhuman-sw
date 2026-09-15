@@ -17,7 +17,12 @@
 - 칸반 컬럼은 저장하지 않는다. `researched_at` / `executed_at` / `published_at`에서 유도한다. `status` 필드를 만들지 마라
 - `id`는 파일명과 같아야 하고 영구히 바꾸지 않는다
 - frontmatter에 주석을 쓰지 마라. 사이트에서 편집·저장하면 사라진다
-- 토큰·쿠키·세션 값은 절대 커밋하지 않는다. 퍼블릭 레포다
+- 토큰·쿠키·세션 값은 절대 커밋하지 않는다. 퍼블릭 레포다. 깃허브 토큰은 `worker/` 서버에만 둔다
+- `category`는 정해진 다섯 개 중 하나다. 새 값을 지어내면 CI가 실패한다
+
+## 편집 서버
+
+사이트에서 글을 고치면 `worker/` (Cloudflare Worker)를 거쳐 커밋된다. 설정은 [`worker/README.md`](worker/README.md).
 
 ## 개발
 

@@ -3,10 +3,12 @@ import { resolve } from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
+import { API_BASE } from './src/config'
 
 const CSP = [
   "default-src 'self'",
-  "connect-src 'self' https://api.github.com",
+  // 편집 서버 말고는 아무 데도 부르지 않는다. 서드파티 스크립트는 하나도 싣지 않는다.
+  ["connect-src 'self'", API_BASE].filter(Boolean).join(' '),
   "img-src 'self' https: data:",
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",

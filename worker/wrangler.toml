@@ -1,0 +1,11 @@
+name = "superhuman-sw-api"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+# 비밀이 아닌 값만 여기 둔다.
+# GITHUB_TOKEN · ADMIN_PASSWORD · SESSION_SECRET 은 `wrangler secret put` 으로 넣는다.
+[vars]
+GITHUB_OWNER = "yeaurpoong-think"
+GITHUB_REPO = "superhuman-sw"
+GITHUB_BRANCH = "main"
+ALLOWED_ORIGIN = "https://yeaurpoong-think.github.io"

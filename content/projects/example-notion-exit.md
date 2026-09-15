@@ -3,6 +3,7 @@ id: example-notion-exit
 title: 회사 노션에서 개인 아카이브로 옮기기
 rank: a0
 tags: [워크플로]
+category: automation
 sources:
   - url: https://www.notion.so/
     type: link
