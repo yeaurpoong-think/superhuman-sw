@@ -28,13 +28,7 @@ export default function App() {
               </p>
             </div>
             <div className="relative z-20 shrink-0">
-              <div className="absolute top-0 right-0">
-                <TokenPanel
-                  admin={board.admin}
-                  onSignIn={board.signIn}
-                  onSignOut={board.signOut}
-                />
-              </div>
+              <TokenPanel admin={board.admin} onSignIn={board.signIn} onSignOut={board.signOut} />
             </div>
           </div>
 

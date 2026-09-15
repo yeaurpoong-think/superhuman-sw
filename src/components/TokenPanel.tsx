@@ -17,7 +17,7 @@ export function TokenPanel({ admin, onSignIn, onSignOut }: Props) {
 
   if (admin) {
     return (
-      <div className="flex items-center gap-3 text-xs text-neutral-500">
+      <div className="flex items-center gap-3 text-xs whitespace-nowrap text-neutral-500">
         <span>
           편집 모드 · <span className="font-medium text-neutral-700">{admin.login}</span>
         </span>
@@ -37,7 +37,7 @@ export function TokenPanel({ admin, onSignIn, onSignOut }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded border border-neutral-300 px-2.5 py-1 text-xs text-neutral-600 hover:bg-neutral-100"
+        className="rounded border border-neutral-300 px-2.5 py-1 text-xs whitespace-nowrap text-neutral-600 hover:bg-neutral-100"
       >
         편집하기
       </button>
@@ -62,7 +62,7 @@ export function TokenPanel({ admin, onSignIn, onSignOut }: Props) {
   return (
     <form
       onSubmit={submit}
-      className="w-80 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+      className="absolute top-0 right-0 w-80 rounded-lg border border-neutral-200 bg-white p-4 shadow-lg"
     >
       <label className="block text-xs font-medium text-neutral-700" htmlFor="token">
         깃허브 개인 토큰
