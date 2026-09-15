@@ -58,8 +58,25 @@ published_at: null
 
 ## 새 프로젝트를 올리는 절차
 
-1. `content/projects/<id>.md` 를 위 형식으로 만든다
-2. `npm run validate` 로 형식을 확인한다 (선택이지만 권장 — CI가 어차피 검사한다)
+**손으로 frontmatter를 짜지 마라.** `id`·`rank`·`researched_at` 은 틀리기 쉽고, 틀리면 CI가 막는다.
+아래 명령이 그 셋을 계산해 주고 계약도 미리 검사한다.
+
+```bash
+npm run new -- --title "인스타 훅 3초 구조 분해" --url "https://www.instagram.com/reel/XXXX/" --category content
+```
+
+- `--url` 은 여러 번 줄 수 있다. 인스타 주소 모양을 보고 `reel`/`carousel` 을 알아서 붙인다
+- `--tags "a,b"`, `--category` 는 선택이다. 분류가 애매하면 아예 빼라
+- 본문은 `--body-file 리서치.md` 로 주거나 파이프로 넘긴다. 아무것도 안 주면 표준 6섹션 뼈대가 들어간다
+
+```bash
+cat 리서치.md | npm run new -- --title "제목" --url "https://..."
+```
+
+그다음:
+
+1. 만들어진 파일의 본문을 채운다
+2. `npm run validate` 로 형식을 확인한다
 3. `main`에 커밋·푸시한다. 1~2분 뒤 사이트에 반영된다
 
 형식을 어긴 파일이 들어오면 CI가 실패하고, 사이트에는 그 카드가 빨간 '스키마 오류' 카드로 뜬다. 다른 카드는 멀쩡히 보인다.

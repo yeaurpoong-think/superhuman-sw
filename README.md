@@ -13,6 +13,6 @@ npm install
 npm run dev
 ```
 
-사이트에서 직접 편집하려면 [`worker/README.md`](worker/README.md)대로 편집 서버를 한 번 띄운다.
+사이트에서 직접 편집하려면 [`docs/EDITING.md`](docs/EDITING.md)대로 금고를 한 번 만든다.
 
 `main`에 푸시하면 GitHub Actions가 빌드해 GitHub Pages로 배포한다.

@@ -1,9 +1,9 @@
 import { decodeBase64Utf8, encodeUtf8Base64, utf8ByteLength } from './base64'
 
 /**
- * 편집 서버(Cloudflare Worker) 클라이언트.
+ * 깃허브 Contents API 클라이언트.
  *
- * 깃허브 토큰은 서버에만 있다. 브라우저가 들고 있는 건 비밀번호로 받은 세션뿐이다.
+ * 토큰은 비밀번호로 잠긴 금고에서 방금 꺼낸 것이다. 자세한 건 vault.ts.
  *
  * 설계상 지키는 세 가지:
  *  1) 쓰기는 한 줄로 직렬화한다. 드래그와 자동저장이 같은 sha로 동시에 PUT 하면 스스로 충돌한다.
@@ -25,12 +25,12 @@ export type Transform = (current: string | null) => string
 /** 전역 fetch는 window에 묶여 있다. 속성으로 꺼내 부르면 Illegal invocation이 난다. */
 const globalFetch = (): typeof fetch => fetch.bind(globalThis)
 
-/** 서버가 주는 상태 코드를 사람이 읽을 말로 바꾼다. */
+/** 깃허브가 주는 상태 코드를 사람이 읽을 말로 바꾼다. */
 function explain(status: number): string {
-  if (status === 401) return '로그인이 풀렸다. 비밀번호를 다시 넣어라'
-  if (status === 403) return '이 경로에는 쓸 수 없다'
-  if (status === 404) return '파일을 찾을 수 없다'
-  if (status >= 500) return '서버 쪽 문제다. 잠시 뒤 다시 시도해라'
+  if (status === 401) return '토큰이 더 이상 유효하지 않다. 만료됐을 수 있다'
+  if (status === 403) return '권한이 없거나 요청이 너무 잦다'
+  if (status === 404) return '파일이나 레포를 찾을 수 없다'
+  if (status >= 500) return '깃허브 쪽 문제다. 잠시 뒤 다시 시도해라'
   return `응답 코드 ${status}`
 }
 
@@ -44,30 +44,11 @@ export class ApiError extends Error {
   }
 }
 
-export type Session = { token: string; expiresAt: number }
-
-/** 비밀번호를 세션으로 바꾼다. 비밀번호는 여기서 한 번 쓰이고 저장되지 않는다. */
-export async function login(
-  apiBase: string,
-  password: string,
-  fetchImpl: typeof fetch = globalFetch(),
-): Promise<Session> {
-  const res = await fetchImpl(`${apiBase}/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password }),
-  })
-  if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as { error?: string }
-    throw new ApiError(body.error ?? explain(res.status), res.status)
-  }
-  return (await res.json()) as Session
-}
-
 export class ApiClient {
   private apiBase: string
-  private session: string
-  private opts: { minWriteIntervalMs?: number; fetch?: typeof fetch }
+  private token: string
+  private branch: string
+  private opts: { minWriteIntervalMs?: number; fetch?: typeof fetch; branch?: string }
 
   private shaCache = new Map<string, string>()
   private queue: Promise<unknown> = Promise.resolve()
@@ -75,11 +56,12 @@ export class ApiClient {
 
   constructor(
     apiBase: string,
-    session: string,
-    opts: { minWriteIntervalMs?: number; fetch?: typeof fetch } = {},
+    token: string,
+    opts: { minWriteIntervalMs?: number; fetch?: typeof fetch; branch?: string } = {},
   ) {
     this.apiBase = apiBase
-    this.session = session
+    this.token = token
+    this.branch = opts.branch ?? 'main'
     this.opts = opts
   }
 
@@ -91,7 +73,9 @@ export class ApiClient {
     return this.http(`${this.apiBase}${path}`, {
       ...init,
       headers: {
-        Authorization: `Bearer ${this.session}`,
+        Accept: 'application/vnd.github+json',
+        Authorization: `Bearer ${this.token}`,
+        'X-GitHub-Api-Version': '2022-11-28',
         ...(init.body ? { 'Content-Type': 'application/json' } : {}),
         ...init.headers,
       },
@@ -106,10 +90,12 @@ export class ApiClient {
     return (await res.json()) as T
   }
 
-  /** 세션이 아직 살아 있는지 확인한다. */
+  /** 토큰이 아직 살아 있고 이 레포에 쓸 수 있는지 확인한다. */
   async verify(): Promise<boolean> {
-    const res = await this.request('/me')
-    return res.ok
+    const res = await this.request('')
+    if (!res.ok) return false
+    const repo = (await res.json()) as { permissions?: { push?: boolean } }
+    return repo.permissions?.push === true
   }
 
   /**
@@ -117,7 +103,7 @@ export class ApiClient {
    * 쓰기 전에 반드시 이걸로 sha를 확보해야 한다.
    */
   async listDir(dir: string): Promise<FileEntry[]> {
-    const res = await this.request(`/contents/${dir}`)
+    const res = await this.request(`/contents/${dir}?ref=${this.branch}`)
     if (res.status === 404) return []
     const items = await this.json<{ path: string; sha: string; type: string }[]>(res, '목록 읽기')
     const files = items.filter((i) => i.type === 'file')
@@ -126,7 +112,7 @@ export class ApiClient {
   }
 
   async getFile(path: string): Promise<FileContent | null> {
-    const res = await this.request(`/contents/${path}`)
+    const res = await this.request(`/contents/${path}?ref=${this.branch}`)
     if (res.status === 404) return null
     const file = await this.json<{ content: string; sha: string }>(res, '파일 읽기')
     this.shaCache.set(path, file.sha)
@@ -170,6 +156,7 @@ export class ApiClient {
           body: JSON.stringify({
             message,
             content: encodeUtf8Base64(next),
+            branch: this.branch,
             ...(sha ? { sha } : {}),
           }),
         })
@@ -197,7 +184,7 @@ export class ApiClient {
       if (!file) return
       const res = await this.request(`/contents/${path}`, {
         method: 'DELETE',
-        body: JSON.stringify({ message, sha: file.sha }),
+        body: JSON.stringify({ message, sha: file.sha, branch: this.branch }),
       })
       await this.json(res, '삭제')
       this.shaCache.delete(path)

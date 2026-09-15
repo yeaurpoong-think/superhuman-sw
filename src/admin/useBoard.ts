@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { API_BASE, PROJECTS_DIR, isEditingConfigured } from '../config'
+import { API_BASE, PROJECTS_DIR, REPO, VAULT_URL } from '../config'
 import { contentErrors, projects as baked, type ProjectRecord } from '../content'
-import { ApiClient, login as requestSession } from '../lib/api'
+import { ApiClient } from '../lib/api'
 import { buildFile, patchFrontmatter, splitFile } from '../lib/markdown'
 import { clearedByMove, patchForMove, rankBetween } from '../lib/move'
 import { sortByRank, stageOf, type Category, type Stage } from '../lib/schema'
 import { applyOverlay, pruneOverlay, readOverlay, writeOverlay, type Overlay } from './overlay'
-import { clearSession, readSession, writeSession } from './session'
+import { fetchVault, openVault } from '../lib/vault'
+import { clearToken, readToken, writeToken } from './session'
 
 export type SaveState =
   | { kind: 'idle' }
@@ -39,36 +40,41 @@ export function useBoard() {
 
   useEffect(() => writeOverlay(overlay), [overlay])
 
-  const client = useMemo(() => (admin ? new ApiClient(API_BASE, admin.token) : null), [admin])
+  const client = useMemo(
+    () => (admin ? new ApiClient(API_BASE, admin.token, { branch: REPO.branch }) : null),
+    [admin],
+  )
 
   const projects = useMemo(() => applyOverlay(baked, overlay), [overlay])
 
+  /** 비밀번호로 금고를 열어 토큰을 꺼낸다. 비밀번호는 저장하지 않는다. */
   const signIn = useCallback(async (password: string, remember: boolean) => {
-    if (!isEditingConfigured()) throw new Error('편집 서버 주소가 아직 설정되지 않았다')
-    const session = await requestSession(API_BASE, password)
-    writeSession(session, remember)
-    setAdmin({ token: session.token })
+    const vault = await fetchVault(VAULT_URL)
+    const token = await openVault(vault, password)
+    const ok = await new ApiClient(API_BASE, token, { branch: REPO.branch }).verify()
+    if (!ok) throw new Error('금고 속 토큰으로는 이 레포에 쓸 수 없다. 토큰이 만료됐을 수 있다')
+    writeToken(token, remember)
+    setAdmin({ token })
   }, [])
 
   const signOut = useCallback(() => {
-    clearSession()
+    clearToken()
     setAdmin(null)
   }, [])
 
-  /** 새로고침해도 편집 모드가 유지되게, 저장된 세션을 한 번 확인한다. */
+  /** 새로고침해도 편집 모드가 유지되게, 저장된 토큰을 한 번 확인한다. */
   useEffect(() => {
-    if (!isEditingConfigured()) return
-    const session = readSession()
-    if (!session) return
+    const token = readToken()
+    if (!token) return
     let alive = true
-    new ApiClient(API_BASE, session.token)
+    new ApiClient(API_BASE, token, { branch: REPO.branch })
       .verify()
       .then((ok) => {
         if (!alive) return
-        if (ok) setAdmin({ token: session.token })
-        else clearSession()
+        if (ok) setAdmin({ token })
+        else clearToken()
       })
-      .catch(() => clearSession())
+      .catch(() => clearToken())
     return () => {
       alive = false
     }

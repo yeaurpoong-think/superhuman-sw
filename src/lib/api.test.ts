@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiClient, login } from './api'
+import { ApiClient } from './api'
 import { decodeBase64Utf8, encodeUtf8Base64 } from './base64'
 
 const BASE = 'https://api.example.workers.dev'
@@ -30,7 +30,7 @@ function fakeServer(initial: Record<string, string> = {}) {
     const json = (status: number, body: unknown) =>
       new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
 
-    if (href.endsWith('/me')) return json(200, { ok: true })
+    if (!href.includes('/contents/')) return json(200, { permissions: { push: true } })
 
     if (method === 'GET') {
       if (!files.has(path)) return json(404, { error: 'not found' })
@@ -130,32 +130,10 @@ describe('updateFile', () => {
     expect(server.files.get('content/projects/a.md')).toBe('원본|1|2|3')
   })
 
-  it('세션을 Bearer로 보낸다', async () => {
-    await client(server).verify()
+  it('토큰을 Bearer로 보내고 쓰기 권한을 확인한다', async () => {
+    expect(await client(server).verify()).toBe(true)
     const headers = server.handler.mock.calls[0][1]?.headers as Record<string, string>
     expect(headers.Authorization).toBe('Bearer session-token')
-  })
-})
-
-describe('login', () => {
-  it('비밀번호를 세션으로 바꾼다', async () => {
-    const fetchImpl = vi.fn(
-      async (_url: string | URL | Request, _init?: RequestInit) =>
-        new Response(JSON.stringify({ token: 't', expiresAt: 123 }), { status: 200 }),
-    )
-    const s = await login(BASE, 'hunter2', fetchImpl as unknown as typeof fetch)
-    expect(s.token).toBe('t')
-    expect(JSON.parse(String(fetchImpl.mock.calls[0][1]?.body)).password).toBe('hunter2')
-  })
-
-  it('틀리면 서버가 준 이유를 그대로 올린다', async () => {
-    const fetchImpl = vi.fn(
-      async (_url: string | URL | Request, _init?: RequestInit) =>
-        new Response(JSON.stringify({ error: '비밀번호가 다르다' }), { status: 401 }),
-    )
-    await expect(login(BASE, 'x', fetchImpl as unknown as typeof fetch)).rejects.toThrow(
-      '비밀번호가 다르다',
-    )
   })
 })
 
@@ -164,10 +142,12 @@ describe('전역 fetch 바인딩', () => {
     const seenThis: unknown[] = []
     const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(function (this: unknown) {
       seenThis.push(this)
-      return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }))
+      return Promise.resolve(
+        new Response(JSON.stringify({ permissions: { push: true } }), { status: 200 }),
+      )
     } as unknown as typeof fetch)
 
-    await new ApiClient(BASE, 'session').verify()
+    await new ApiClient(BASE, 'token').verify()
 
     expect(seenThis[0]).toBe(globalThis)
     spy.mockRestore()

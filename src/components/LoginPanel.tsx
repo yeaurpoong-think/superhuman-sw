@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Admin } from '../admin/useBoard'
-import { isEditingConfigured } from '../config'
+
 
 type Props = {
   admin: Admin | null
@@ -14,9 +14,6 @@ export function LoginPanel({ admin, onSignIn, onSignOut }: Props) {
   const [remember, setRemember] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-
-  // 편집 서버를 연결하기 전에는 방문자에게 아무것도 보여주지 않는다.
-  if (!isEditingConfigured()) return null
 
   if (admin) {
     return (
@@ -88,7 +85,7 @@ export function LoginPanel({ admin, onSignIn, onSignOut }: Props) {
       </label>
 
       <p className="mt-2.5 text-[11px] leading-relaxed text-neutral-500">
-        기억해 두면 90일 동안 다시 묻지 않는다.
+        비밀번호로 잠긴 금고를 연다. 처음 한 번은 1~2초 걸린다.
       </p>
 
       {error && <p className="mt-2 text-[11px] text-red-600">{error}</p>}

@@ -9,7 +9,9 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "validate": "node scripts/build-content.mjs --check"
+    "validate": "node scripts/build-content.mjs --check",
+    "new": "node scripts/new-project.mjs",
+    "seal": "node scripts/seal-token.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

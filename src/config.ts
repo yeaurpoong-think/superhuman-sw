@@ -6,14 +6,7 @@ export const REPO = {
 
 export const PROJECTS_DIR = 'content/projects'
 
-/**
- * 편집 서버 주소. 깃허브 토큰은 이 서버에만 있다.
- *
- * `worker/` 를 배포하면 나오는 주소를 여기 적는다 (끝에 슬래시 없이).
- * 예: https://superhuman-sw-api.<계정이름>.workers.dev
- *
- * 비워 두면 사이트는 읽기 전용으로만 뜬다.
- */
-export const API_BASE = ''
+export const API_BASE = `https://api.github.com/repos/${REPO.owner}/${REPO.repo}`
 
-export const isEditingConfigured = () => API_BASE.length > 0
+/** vite.config.ts 의 base 와 같은 값이어야 한다. */
+export const VAULT_URL = '/superhuman-sw/vault.json'
