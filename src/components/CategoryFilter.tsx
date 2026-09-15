@@ -9,6 +9,7 @@ type Props = {
   onChange: (value: CategoryFilterValue) => void
 }
 
+/** 목록 서랍. 분류 하나를 골라 그 칸만 꺼내 본다. */
 export function CategoryFilter({ projects, value, onChange }: Props) {
   const countOf = (key: CategoryFilterValue) => {
     if (key === 'all') return projects.length
@@ -23,7 +24,7 @@ export function CategoryFilter({ projects, value, onChange }: Props) {
   ]
 
   return (
-    <div className="mb-5 flex flex-wrap gap-1.5">
+    <div className="-mx-1 flex flex-wrap items-center">
       {items.map(({ key, label }) => {
         const count = countOf(key)
         const selected = value === key
@@ -32,16 +33,12 @@ export function CategoryFilter({ projects, value, onChange }: Props) {
             key={key}
             type="button"
             onClick={() => onChange(key)}
-            className={`rounded-full border px-3 py-1 text-xs whitespace-nowrap transition ${
-              selected
-                ? 'border-neutral-900 bg-neutral-900 text-white'
-                : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300'
+            className={`mx-1 border-b-2 px-1.5 py-2 whitespace-nowrap transition-colors ${
+              selected ? 'border-accent text-ink' : 'border-transparent text-muted hover:text-ink'
             } ${count === 0 && !selected ? 'opacity-40' : ''}`}
           >
-            {label}
-            <span className={`ml-1.5 tabular-nums ${selected ? 'text-neutral-400' : 'text-neutral-400'}`}>
-              {count}
-            </span>
+            <span className="font-serif text-sm">{label}</span>
+            <span className="label ml-1.5 align-middle">{count}</span>
           </button>
         )
       })}

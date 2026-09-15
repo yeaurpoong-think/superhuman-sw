@@ -28,7 +28,7 @@ type Props = {
 const fmt = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' })
 
 const FIELD =
-  'mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-xs outline-none focus:border-neutral-500'
+  'mt-1 w-full rounded border border-rule px-2 py-1.5 text-xs outline-none focus:border-accent'
 
 export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage, onClose }: Props) {
   const [editing, setEditing] = useState(false)
@@ -89,28 +89,24 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
 
   return (
     <div
-      className="fixed inset-0 z-40 overflow-y-auto bg-neutral-900/20 p-4 backdrop-blur-[1px] md:p-10"
+      className="fixed inset-0 z-40 overflow-y-auto bg-shell/70 p-3 md:p-10"
       onClick={onClose}
     >
       <div
-        className="mx-auto max-w-3xl rounded-xl border border-neutral-200 bg-white shadow-xl"
+        className="sheet mx-auto max-w-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="border-b border-neutral-100 px-6 py-5">
+        <header className="border-b border-rule px-6 py-6 md:px-9">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-400">
-                <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-600">
-                  {STAGE_LABELS[stage]}
-                </span>
+              <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
+                <span className="label border border-rule px-1.5 py-0.5">{STAGE_LABELS[stage]}</span>
                 {project.category && (
-                  <span className="rounded bg-neutral-900 px-1.5 py-0.5 text-white">
-                    {CATEGORY_LABELS[project.category]}
-                  </span>
+                  <span className="label text-accent">{CATEGORY_LABELS[project.category]}</span>
                 )}
-                <span>리서치 {fmt.format(new Date(project.researched_at))}</span>
+                <span className="label">리서치 {fmt.format(new Date(project.researched_at))}</span>
                 {project.published_at && (
-                  <span>발행 {fmt.format(new Date(project.published_at))}</span>
+                  <span className="label">발행 {fmt.format(new Date(project.published_at))}</span>
                 )}
               </div>
 
@@ -118,10 +114,10 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="mt-2 w-full rounded border border-neutral-300 px-2 py-1.5 text-lg font-semibold outline-none focus:border-neutral-500"
+                  className="mt-3 w-full border border-rule bg-leaf px-2 py-1.5 font-display text-xl outline-none focus:border-accent"
                 />
               ) : (
-                <h2 className="mt-2 text-lg font-semibold tracking-tight text-neutral-900">
+                <h2 className="mt-3 font-display text-2xl leading-snug tracking-tight text-ink">
                   {project.title}
                 </h2>
               )}
@@ -130,7 +126,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
             <button
               type="button"
               onClick={onClose}
-              className="shrink-0 rounded px-2 py-1 text-xs text-neutral-400 hover:bg-neutral-100"
+              className="shrink-0 rounded px-2 py-1 text-xs text-muted hover:bg-accent/10"
             >
               닫기
             </button>
@@ -144,7 +140,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
                     href={s.url}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="text-neutral-500 underline decoration-neutral-300 underline-offset-2 hover:text-neutral-900"
+                    className="text-muted underline decoration-accent/40 underline-offset-2 hover:text-ink"
                   >
                     {s.title ?? s.url}
                   </a>
@@ -154,12 +150,12 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
           )}
         </header>
 
-        <div className="px-6 py-5">
+        <div className="px-6 py-7 md:px-9">
           {editing ? (
             <>
               <Suspense
                 fallback={
-                  <p className="py-8 text-center text-xs text-neutral-400">편집기 불러오는 중…</p>
+                  <p className="py-8 text-center text-xs text-muted">편집기 불러오는 중…</p>
                 }
               >
                 <Editor
@@ -172,7 +168,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
               </Suspense>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <label className="block text-xs text-neutral-500">
+                <label className="block text-xs text-muted">
                   분류
                   <select
                     value={category}
@@ -188,7 +184,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
                   </select>
                 </label>
 
-                <label className="block text-xs text-neutral-500">
+                <label className="block text-xs text-muted">
                   발행한 글 주소
                   <input
                     value={postUrl}
@@ -198,7 +194,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
                   />
                 </label>
 
-                <label className="block text-xs text-neutral-500">
+                <label className="block text-xs text-muted">
                   리서치 날짜
                   <input
                     type="date"
@@ -208,7 +204,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
                   />
                 </label>
 
-                <label className="block text-xs text-neutral-500">
+                <label className="block text-xs text-muted">
                   실행 날짜
                   <input
                     type="date"
@@ -218,7 +214,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
                   />
                 </label>
 
-                <label className="block text-xs text-neutral-500">
+                <label className="block text-xs text-muted">
                   발행 날짜
                   <input
                     type="date"
@@ -229,7 +225,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
                 </label>
               </div>
 
-              <p className="mt-3 text-[11px] leading-relaxed text-neutral-400">
+              <p className="mt-3 text-[11px] leading-relaxed text-muted">
                 칸반 위치는 이 날짜들에서 정해진다. 발행 날짜를 넣으면 콘텐츠 완료로, 비우면 실행
                 완료로 돌아간다. 칸을 끌어 옮기면 그날 날짜가 자동으로 들어간다.
               </p>
@@ -244,12 +240,12 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
         </div>
 
         {editable && (
-          <footer className="flex items-center justify-between gap-3 border-t border-neutral-100 px-6 py-4">
+          <footer className="flex items-center justify-between gap-3 border-t border-rule px-6 py-4 md:px-9">
             <button
               type="button"
               onClick={remove}
               disabled={busy}
-              className="shrink-0 rounded px-2 py-1 text-xs text-neutral-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+              className="shrink-0 rounded px-2 py-1 text-xs text-muted hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
             >
               카드 지우기
             </button>
@@ -258,7 +254,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
                 <button
                   type="button"
                   onClick={cancel}
-                  className="rounded px-3 py-1.5 text-xs text-neutral-500 hover:bg-neutral-100"
+                  className="rounded px-3 py-1.5 text-xs text-muted hover:bg-accent/10"
                 >
                   취소
                 </button>
@@ -266,7 +262,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
                   type="button"
                   onClick={save}
                   disabled={busy}
-                  className="rounded bg-neutral-900 px-3 py-1.5 text-xs text-white disabled:opacity-40"
+                  className="rounded bg-ink px-3 py-1.5 text-xs text-white disabled:opacity-40"
                 >
                   {busy ? '저장 중' : '저장'}
                 </button>
@@ -275,7 +271,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="shrink-0 rounded border border-neutral-300 px-3 py-1.5 text-xs text-neutral-700 hover:bg-neutral-100"
+                className="shrink-0 rounded border border-rule px-3 py-1.5 text-xs text-ink hover:bg-accent/10"
               >
                 편집
               </button>

@@ -21,7 +21,7 @@ export function SaveStatus({ state, onDismiss }: { state: SaveState; onDismiss: 
   }
 
   return (
-    <div className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-full border border-neutral-200 bg-white px-4 py-2 text-xs text-neutral-600 shadow-lg">
+    <div className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-full border border-rule bg-leaf px-4 py-2 text-xs text-ink-soft shadow-lg">
       {state.kind === 'saving' ? '저장 중…' : '커밋 완료 · 사이트 반영까지 2분쯤'}
     </div>
   )

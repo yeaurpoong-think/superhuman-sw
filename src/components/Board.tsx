@@ -25,7 +25,8 @@ type Props = {
 
 const isStage = (v: string): v is Stage => (STAGES as readonly string[]).includes(v)
 
-function Column({
+/** 서가 한 칸. 이름표가 붙고 그 아래로 책이 꽂힌다. */
+function Shelf({
   stage,
   count,
   editable,
@@ -41,15 +42,15 @@ function Column({
   return (
     <section
       ref={setNodeRef}
-      className={`rounded-xl p-3 transition-colors ${
-        isOver ? 'bg-neutral-200/80' : 'bg-neutral-100/70'
-      }`}
+      className={`transition-colors ${isOver ? 'bg-accent/[0.06]' : ''}`}
     >
-      <header className="flex items-baseline justify-between px-1 pb-3">
-        <h2 className="text-sm font-medium text-neutral-700">{STAGE_LABELS[stage]}</h2>
-        <span className="text-sm tabular-nums text-neutral-400">{count}</span>
+      <header className="rule-double flex items-baseline justify-between pb-2">
+        <h2 className="label text-ink-soft">{STAGE_LABELS[stage]}</h2>
+        <span className="font-display text-base leading-none text-ink-soft tabular-nums">
+          {count}
+        </span>
       </header>
-      <div className="flex min-h-16 flex-col gap-2.5">{children}</div>
+      <div className="flex min-h-24 flex-col gap-2.5 pt-3">{children}</div>
     </section>
   )
 }
@@ -106,22 +107,24 @@ export function Board({ projects, editable, onMove, onOpen }: Props) {
   const columns = STAGES.map((stage) => ({ stage, cards: column(stage) }))
 
   const grid = (
-    <div className="grid gap-4 md:grid-cols-3">
-      {columns.map(({ stage, cards }) => (
-        <Column key={stage} stage={stage} count={counts[stage]} editable={editable}>
-          {editable ? (
-            <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-              {cards.map((p) => (
-                <SortableCard key={p.id} project={p} onOpen={() => onOpen(p.id)} />
-              ))}
-            </SortableContext>
-          ) : (
-            cards.map((p) => <Card key={p.id} project={p} onOpen={() => onOpen(p.id)} />)
-          )}
-          {cards.length === 0 && (
-            <p className="px-1 py-6 text-center text-xs text-neutral-400">비어 있음</p>
-          )}
-        </Column>
+    <div className="grid gap-x-8 gap-y-10 md:grid-cols-3 md:divide-x md:divide-rule-soft">
+      {columns.map(({ stage, cards }, i) => (
+        <div key={stage} className={i > 0 ? 'md:pl-8' : undefined}>
+          <Shelf stage={stage} count={counts[stage]} editable={editable}>
+            {editable ? (
+              <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+                {cards.map((p) => (
+                  <SortableCard key={p.id} project={p} onOpen={() => onOpen(p.id)} />
+                ))}
+              </SortableContext>
+            ) : (
+              cards.map((p) => <Card key={p.id} project={p} onOpen={() => onOpen(p.id)} />)
+            )}
+            {cards.length === 0 && (
+              <p className="label py-8 text-center text-rule">빈 서가</p>
+            )}
+          </Shelf>
+        </div>
       ))}
     </div>
   )

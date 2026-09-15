@@ -24,18 +24,18 @@ export function NewProject({ onCreate }: { onCreate: (v: { title: string; url?: 
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="새 프로젝트 제목"
-        className="min-w-52 flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500"
+        className="min-w-52 flex-1 rounded-lg border border-rule bg-leaf px-3 py-2 text-sm outline-none focus:border-accent"
       />
       <input
         value={url}
         onChange={(e) => setUrl(e.target.value)}
         placeholder="영감을 받은 링크 (선택)"
-        className="min-w-52 flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500"
+        className="min-w-52 flex-1 rounded-lg border border-rule bg-leaf px-3 py-2 text-sm outline-none focus:border-accent"
       />
       <button
         type="submit"
         disabled={busy || title.trim().length === 0}
-        className="rounded-lg bg-neutral-900 px-4 py-2 text-sm text-white disabled:opacity-40"
+        className="rounded-lg bg-ink px-4 py-2 text-sm text-white disabled:opacity-40"
       >
         {busy ? '만드는 중' : '추가'}
       </button>

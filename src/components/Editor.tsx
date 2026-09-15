@@ -20,7 +20,7 @@ type MarkdownStorage = { markdown: { getMarkdown: () => string } }
 const toMarkdown = (editor: { storage: unknown }) =>
   (editor.storage as MarkdownStorage).markdown.getMarkdown()
 
-const BTN = 'rounded px-2 py-1 text-xs text-neutral-600 hover:bg-neutral-200 disabled:opacity-30'
+const BTN = 'rounded px-2 py-1 text-xs text-ink-soft hover:bg-accent/10 disabled:opacity-30'
 
 /** 클립보드에서 이미지 파일만 골라낸다. 글자를 복사했을 때는 빈 배열이다. */
 const imagesFrom = (data: DataTransfer | null): File[] =>
@@ -38,7 +38,7 @@ function RichEditor({ value, onChange, onUploadImage, onUploadError, onUploading
     editorProps: {
       attributes: {
         class:
-          'prose-editor min-h-72 rounded-b-lg border border-t-0 border-neutral-200 bg-white px-4 py-3 text-sm leading-relaxed outline-none',
+          'prose-editor min-h-72 rounded-b-lg border border-t-0 border-rule bg-leaf px-4 py-3 text-sm leading-relaxed outline-none',
       },
       handlePaste: (view, event) => {
         const images = imagesFrom(event.clipboardData)
@@ -68,11 +68,11 @@ function RichEditor({ value, onChange, onUploadImage, onUploadError, onUploading
   if (!editor) return null
 
   const active = (name: string, attrs?: Record<string, unknown>) =>
-    editor.isActive(name, attrs) ? 'bg-neutral-200 ' : ''
+    editor.isActive(name, attrs) ? 'bg-rule-soft ' : ''
 
   return (
     <div>
-      <div className="flex flex-wrap gap-0.5 rounded-t-lg border border-neutral-200 bg-neutral-50 p-1">
+      <div className="flex flex-wrap gap-0.5 rounded-t-lg border border-rule bg-paper p-1">
         <button
           type="button"
           className={active('heading', { level: 2 }) + BTN}
@@ -165,7 +165,7 @@ function RawEditor({ value, onChange, onUploadImage, onUploadError, onUploadingC
       onChange={(e) => onChange(e.target.value)}
       onPaste={handlePaste}
       spellCheck={false}
-      className="min-h-72 w-full rounded-lg border border-neutral-200 bg-white px-4 py-3 font-mono text-xs leading-relaxed outline-none focus:border-neutral-400"
+      className="min-h-72 w-full rounded-lg border border-rule bg-leaf px-4 py-3 font-mono text-xs leading-relaxed outline-none focus:border-accent"
     />
   )
 }
@@ -199,10 +199,10 @@ export function Editor({
   return (
     <div>
       <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-muted">
           {forced ? (
             <>
-              <span className="font-medium text-neutral-700">{gate.reason}</span>가 들어 있어 원문
+              <span className="font-medium text-ink">{gate.reason}</span>가 들어 있어 원문
               그대로 편집한다. 서식 편집기를 쓰면 이 부분이 사라진다.
             </>
           ) : (
@@ -213,7 +213,7 @@ export function Editor({
           <button
             type="button"
             onClick={() => onToggleRaw(!raw)}
-            className="shrink-0 text-xs text-neutral-500 underline underline-offset-2 hover:text-neutral-800"
+            className="shrink-0 text-xs text-muted underline underline-offset-2 hover:text-ink"
           >
             {raw ? '서식 편집기로' : '원문으로'}
           </button>
@@ -226,7 +226,7 @@ export function Editor({
         <RichEditor value={value} onChange={(md) => onChange(normalizeMarkdown(md))} {...shared} />
       )}
 
-      {uploading && <p className="mt-2 text-xs text-neutral-500">이미지 올리는 중…</p>}
+      {uploading && <p className="mt-2 text-xs text-muted">이미지 올리는 중…</p>}
       {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
     </div>
   )

@@ -10,6 +10,9 @@ const dateOf = (p: ProjectRecord) => {
   return { label: '리서치', at: p.researched_at }
 }
 
+/** 청구기호처럼 쓰는 짧은 식별자. 파일명 그대로다. */
+const callNumber = (id: string) => id.replace(/^p-/, '').toUpperCase()
+
 export function Card({
   project,
   draggable = false,
@@ -24,44 +27,45 @@ export function Card({
   return (
     <article
       onClick={onOpen}
-      className={`rounded-lg border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-sm ${
+      className={`group relative border border-rule bg-leaf px-4 pt-3.5 pb-3 transition-shadow hover:shadow-[0_2px_10px_-4px_rgba(60,45,20,0.35)] ${
         draggable ? 'cursor-grab active:cursor-grabbing' : onOpen ? 'cursor-pointer' : ''
       }`}
     >
-      <h3 className="text-[15px] leading-snug font-medium text-neutral-900">{project.title}</h3>
+      {/* 책등처럼 왼쪽에 서는 얇은 띠 */}
+      <span
+        aria-hidden
+        className="absolute inset-y-0 left-0 w-[3px] bg-accent/0 transition-colors group-hover:bg-accent/60"
+      />
 
-      {(project.category || project.tags.length > 0) && (
-        <ul className="mt-2.5 flex flex-wrap gap-1.5">
-          {project.category && (
-            <li className="rounded bg-neutral-900 px-1.5 py-0.5 text-[11px] text-white">
-              {CATEGORY_LABELS[project.category]}
-            </li>
-          )}
-          {project.tags.map((tag) => (
-            <li
-              key={tag}
-              className="rounded bg-neutral-100 px-1.5 py-0.5 text-[11px] text-neutral-600"
-            >
-              {tag}
-            </li>
-          ))}
-        </ul>
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="label">{callNumber(project.id)}</span>
+        {project.category && (
+          <span className="label text-accent">{CATEGORY_LABELS[project.category]}</span>
+        )}
+      </div>
+
+      <h3 className="mt-2 font-serif text-[16px] leading-snug text-ink">{project.title}</h3>
+
+      {project.tags.length > 0 && (
+        <p className="mt-2 text-[11px] text-muted">
+          {project.tags.map((t) => `#${t}`).join('  ')}
+        </p>
       )}
 
-      <div className="mt-3 flex items-center gap-3 text-[11px] text-neutral-400">
-        <span>
+      <div className="mt-3 flex items-center gap-3 border-t border-rule-soft pt-2">
+        <span className="label">
           {label} {fmt.format(new Date(at))}
         </span>
-        {project.sources.length > 0 && <span>출처 {project.sources.length}</span>}
+        {project.sources.length > 0 && <span className="label">출처 {project.sources.length}</span>}
         {project.post_url && (
           <a
             href={project.post_url}
             target="_blank"
             rel="noreferrer noopener"
             onClick={(e) => e.stopPropagation()}
-            className="text-neutral-500 underline decoration-neutral-300 underline-offset-2 hover:text-neutral-900"
+            className="label text-accent underline underline-offset-2"
           >
-            글 보기
+            발행본
           </a>
         )}
       </div>
