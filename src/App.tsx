@@ -64,6 +64,8 @@ export default function App() {
             project={open}
             editable={board.admin !== null}
             onSave={(changes) => board.saveCard(open.id, changes)}
+            onDelete={board.deleteCard}
+            onUploadImage={board.uploadImage}
             onClose={() => setOpenId(null)}
           />
         </Suspense>

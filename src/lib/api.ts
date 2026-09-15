@@ -178,6 +178,24 @@ export class ApiClient {
     })
   }
 
+  /**
+   * 새 파일을 그대로 올린다. 이미지처럼 변환할 것이 없는 바이너리용이다.
+   * 경로가 매번 새로 만들어지므로 sha도, 충돌 재시도도 필요 없다.
+   */
+  uploadFile(path: string, base64: string, message: string): Promise<WriteResult> {
+    return this.enqueue(async () => {
+      const res = await this.request(`/contents/${path}`, {
+        method: 'PUT',
+        body: JSON.stringify({ message, content: base64, branch: this.branch }),
+      })
+      const body = await this.json<{ content: { sha: string }; commit: { sha: string } }>(
+        res,
+        '이미지 올리기',
+      )
+      return { path, contentSha: body.content.sha, commitSha: body.commit.sha }
+    })
+  }
+
   deleteFile(path: string, message: string): Promise<void> {
     return this.enqueue(async () => {
       const file = await this.getFile(path)

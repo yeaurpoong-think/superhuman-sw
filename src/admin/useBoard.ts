@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { API_BASE, PROJECTS_DIR, REPO, VAULT_URL } from '../config'
 import { contentErrors, projects as baked, type ProjectRecord } from '../content'
 import { ApiClient } from '../lib/api'
+import { encodeBytesBase64 } from '../lib/base64'
+import { MAX_IMAGE_BYTES, extensionFor, imagePath, rawUrl } from '../lib/images'
 import { buildFile, patchFrontmatter, splitFile } from '../lib/markdown'
 import { clearedByMove, patchForMove, rankBetween } from '../lib/move'
 import { sortByRank, stageOf, type Category, type Stage } from '../lib/schema'
@@ -164,6 +166,57 @@ export function useBoard() {
     [projects, client, commit],
   )
 
+  /** 카드를 지운다. 되돌리려면 깃 히스토리를 봐야 하므로 부르는 쪽에서 반드시 확인을 받는다. */
+  const deleteCard = useCallback(
+    async (id: string) => {
+      const card = projects.find((p) => p.id === id)
+      if (!card || !client) return
+
+      const previous = overlay[id]
+      setOverlay((o) => ({ ...o, [id]: { record: null, commitSha: null, at: Date.now() } }))
+      setSave({ kind: 'saving' })
+      try {
+        await client.deleteFile(card.file, `remove: ${card.title}`)
+        setSave({ kind: 'deploying' })
+        setTimeout(
+          () => setSave((st) => (st.kind === 'deploying' ? { kind: 'idle' } : st)),
+          DEPLOY_HINT_MS,
+        )
+      } catch (e) {
+        setOverlay((o) => {
+          const next = { ...o }
+          if (previous) next[id] = previous
+          else delete next[id]
+          return next
+        })
+        setSave({ kind: 'error', message: e instanceof Error ? e.message : '지우지 못했다' })
+      }
+    },
+    [projects, client, overlay],
+  )
+
+  /**
+   * 붙여넣은 이미지를 레포에 올리고 본문에 넣을 주소를 돌려준다.
+   * 본문 저장과는 별개의 커밋이라, 편집을 취소해도 이미지 파일은 레포에 남는다.
+   */
+  const uploadImage = useCallback(
+    async (file: File): Promise<string> => {
+      if (!client) throw new Error('편집 모드가 아니다')
+      const ext = extensionFor(file.type)
+      if (!ext) throw new Error('이미지만 붙여넣을 수 있다')
+      if (file.size > MAX_IMAGE_BYTES) {
+        throw new Error(
+          `이미지가 너무 크다 (${(file.size / 1_000_000).toFixed(1)}MB). 4MB 이하로 줄여라`,
+        )
+      }
+      const path = imagePath(new Date(), ext)
+      const bytes = new Uint8Array(await file.arrayBuffer())
+      await client.uploadFile(path, encodeBytesBase64(bytes), `image: ${path}`)
+      return rawUrl(REPO.owner, REPO.repo, REPO.branch, path)
+    },
+    [client],
+  )
+
   const createCard = useCallback(
     async (input: { title: string; url?: string }) => {
       if (!client) return
@@ -210,5 +263,7 @@ export function useBoard() {
     moveCard,
     createCard,
     saveCard,
+    deleteCard,
+    uploadImage,
   }
 }

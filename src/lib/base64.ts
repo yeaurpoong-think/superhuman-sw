@@ -27,3 +27,12 @@ export function decodeBase64Utf8(b64: string): string {
 export function utf8ByteLength(text: string): number {
   return new TextEncoder().encode(text).length
 }
+
+/** 이미지 같은 바이너리를 그대로 base64로 바꾼다. 깃허브는 base64만 받는다. */
+export function encodeBytesBase64(bytes: Uint8Array): string {
+  let binary = ''
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK))
+  }
+  return btoa(binary)
+}

@@ -1,11 +1,18 @@
+import Image from '@tiptap/extension-image'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import { useState } from 'react'
 import { Markdown } from 'tiptap-markdown'
 import { normalizeMarkdown, richEditorGate } from '../lib/markdown-rich'
+
+export type UploadImage = (file: File) => Promise<string>
 
 type Props = {
   value: string
   onChange: (markdown: string) => void
+  onUploadImage?: UploadImage
+  onUploadError?: (message: string) => void
+  onUploadingChange?: (uploading: boolean) => void
 }
 
 /** tiptap-markdown이 타입을 넓혀주지 않아 여기서만 좁혀 쓴다. */
@@ -13,18 +20,47 @@ type MarkdownStorage = { markdown: { getMarkdown: () => string } }
 const toMarkdown = (editor: { storage: unknown }) =>
   (editor.storage as MarkdownStorage).markdown.getMarkdown()
 
-const BTN =
-  'rounded px-2 py-1 text-xs text-neutral-600 hover:bg-neutral-200 disabled:opacity-30'
+const BTN = 'rounded px-2 py-1 text-xs text-neutral-600 hover:bg-neutral-200 disabled:opacity-30'
 
-function RichEditor({ value, onChange }: Props) {
+/** 클립보드에서 이미지 파일만 골라낸다. 글자를 복사했을 때는 빈 배열이다. */
+const imagesFrom = (data: DataTransfer | null): File[] =>
+  Array.from(data?.files ?? []).filter((f) => f.type.startsWith('image/'))
+
+function RichEditor({ value, onChange, onUploadImage, onUploadError, onUploadingChange }: Props) {
   const editor = useEditor({
-    extensions: [StarterKit, Markdown.configure({ html: false, breaks: false })],
+    extensions: [
+      StarterKit,
+      Image.configure({ inline: false }),
+      Markdown.configure({ html: false, breaks: false }),
+    ],
     content: value,
     onUpdate: ({ editor }) => onChange(toMarkdown(editor)),
     editorProps: {
       attributes: {
         class:
           'prose-editor min-h-72 rounded-b-lg border border-t-0 border-neutral-200 bg-white px-4 py-3 text-sm leading-relaxed outline-none',
+      },
+      handlePaste: (view, event) => {
+        const images = imagesFrom(event.clipboardData)
+        if (images.length === 0 || !onUploadImage) return false
+        event.preventDefault()
+
+        void (async () => {
+          onUploadingChange?.(true)
+          try {
+            for (const file of images) {
+              const src = await onUploadImage(file)
+              const node = view.state.schema.nodes.image.create({ src })
+              view.dispatch(view.state.tr.replaceSelectionWith(node))
+            }
+          } catch (e) {
+            onUploadError?.(e instanceof Error ? e.message : '이미지를 올리지 못했다')
+          } finally {
+            onUploadingChange?.(false)
+          }
+        })()
+
+        return true
       },
     },
   })
@@ -99,11 +135,35 @@ function RichEditor({ value, onChange }: Props) {
   )
 }
 
-function RawEditor({ value, onChange }: Props) {
+function RawEditor({ value, onChange, onUploadImage, onUploadError, onUploadingChange }: Props) {
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const images = imagesFrom(e.clipboardData)
+    if (images.length === 0 || !onUploadImage) return
+    e.preventDefault()
+
+    const target = e.currentTarget
+    const at = target.selectionStart
+
+    void (async () => {
+      onUploadingChange?.(true)
+      try {
+        const urls: string[] = []
+        for (const file of images) urls.push(await onUploadImage(file))
+        const markdown = urls.map((u) => `![](${u})`).join('\n')
+        onChange(`${value.slice(0, at)}${markdown}${value.slice(target.selectionEnd)}`)
+      } catch (err) {
+        onUploadError?.(err instanceof Error ? err.message : '이미지를 올리지 못했다')
+      } finally {
+        onUploadingChange?.(false)
+      }
+    })()
+  }
+
   return (
     <textarea
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onPaste={handlePaste}
       spellCheck={false}
       className="min-h-72 w-full rounded-lg border border-neutral-200 bg-white px-4 py-3 font-mono text-xs leading-relaxed outline-none focus:border-neutral-400"
     />
@@ -119,13 +179,26 @@ export function Editor({
   onChange,
   raw,
   onToggleRaw,
+  onUploadImage,
 }: Props & { raw: boolean; onToggleRaw: (raw: boolean) => void }) {
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   const gate = richEditorGate(value)
   const forced = !gate.safe
 
+  const shared = {
+    onUploadImage,
+    onUploadError: setError,
+    onUploadingChange: (busy: boolean) => {
+      setUploading(busy)
+      if (busy) setError(null)
+    },
+  }
+
   return (
     <div>
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-2 flex items-center justify-between gap-3">
         <p className="text-xs text-neutral-500">
           {forced ? (
             <>
@@ -133,14 +206,14 @@ export function Editor({
               그대로 편집한다. 서식 편집기를 쓰면 이 부분이 사라진다.
             </>
           ) : (
-            '본문'
+            '본문 · 이미지는 그대로 붙여넣으면 된다'
           )}
         </p>
         {!forced && (
           <button
             type="button"
             onClick={() => onToggleRaw(!raw)}
-            className="text-xs text-neutral-500 underline underline-offset-2 hover:text-neutral-800"
+            className="shrink-0 text-xs text-neutral-500 underline underline-offset-2 hover:text-neutral-800"
           >
             {raw ? '서식 편집기로' : '원문으로'}
           </button>
@@ -148,10 +221,13 @@ export function Editor({
       </div>
 
       {forced || raw ? (
-        <RawEditor value={value} onChange={onChange} />
+        <RawEditor value={value} onChange={onChange} {...shared} />
       ) : (
-        <RichEditor value={value} onChange={(md) => onChange(normalizeMarkdown(md))} />
+        <RichEditor value={value} onChange={(md) => onChange(normalizeMarkdown(md))} {...shared} />
       )}
+
+      {uploading && <p className="mt-2 text-xs text-neutral-500">이미지 올리는 중…</p>}
+      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
     </div>
   )
 }

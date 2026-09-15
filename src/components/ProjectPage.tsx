@@ -20,6 +20,8 @@ type Props = {
   project: ProjectRecord
   editable: boolean
   onSave: (changes: CardChanges) => Promise<void>
+  onDelete: (id: string) => Promise<void>
+  onUploadImage: (file: File) => Promise<string>
   onClose: () => void
 }
 
@@ -28,7 +30,7 @@ const fmt = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' })
 const FIELD =
   'mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-xs outline-none focus:border-neutral-500'
 
-export function ProjectPage({ project, editable, onSave, onClose }: Props) {
+export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage, onClose }: Props) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(project.title)
   const [body, setBody] = useState(project.body)
@@ -51,6 +53,20 @@ export function ProjectPage({ project, editable, onSave, onClose }: Props) {
     setExecuted(toDateInput(project.executed_at))
     setPublished(toDateInput(project.published_at))
     setEditing(false)
+  }
+
+  /** 되돌리려면 깃 히스토리를 봐야 한다. 실수로 누르는 일이 없게 한 번 묻는다. */
+  const remove = async () => {
+    if (!window.confirm(`'${project.title}' 카드를 지운다. 되돌리려면 깃 기록을 뒤져야 한다. 계속할까?`)) {
+      return
+    }
+    setBusy(true)
+    try {
+      await onDelete(project.id)
+      onClose()
+    } finally {
+      setBusy(false)
+    }
   }
 
   const save = async () => {
@@ -146,7 +162,13 @@ export function ProjectPage({ project, editable, onSave, onClose }: Props) {
                   <p className="py-8 text-center text-xs text-neutral-400">편집기 불러오는 중…</p>
                 }
               >
-                <Editor value={body} onChange={setBody} raw={raw} onToggleRaw={setRaw} />
+                <Editor
+                  value={body}
+                  onChange={setBody}
+                  raw={raw}
+                  onToggleRaw={setRaw}
+                  onUploadImage={onUploadImage}
+                />
               </Suspense>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -223,7 +245,14 @@ export function ProjectPage({ project, editable, onSave, onClose }: Props) {
 
         {editable && (
           <footer className="flex items-center justify-between gap-3 border-t border-neutral-100 px-6 py-4">
-            <span className="truncate text-xs text-neutral-400">{project.file}</span>
+            <button
+              type="button"
+              onClick={remove}
+              disabled={busy}
+              className="shrink-0 rounded px-2 py-1 text-xs text-neutral-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+            >
+              카드 지우기
+            </button>
             {editing ? (
               <div className="flex shrink-0 gap-2">
                 <button
