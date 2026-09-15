@@ -1,16 +1,20 @@
 import { Suspense, lazy, useState } from 'react'
 import { useBoard } from './admin/useBoard'
 import { Board } from './components/Board'
+import { CategoryFilter, type CategoryFilterValue } from './components/CategoryFilter'
 import { Metrics } from './components/Metrics'
+import { filterByCategory } from './lib/schema'
 import { NewProject } from './components/NewProject'
 const ProjectPage = lazy(() => import('./components/ProjectPage').then((m) => ({ default: m.ProjectPage })))
 import { SaveStatus } from './components/SaveStatus'
 import { SchemaErrors } from './components/SchemaErrors'
-import { TokenPanel } from './components/TokenPanel'
+import { LoginPanel } from './components/LoginPanel'
 
 export default function App() {
   const board = useBoard()
   const [openId, setOpenId] = useState<string | null>(null)
+  const [category, setCategory] = useState<CategoryFilterValue>('all')
+  const visible = filterByCategory(board.projects, category)
   const open = board.projects.find((p) => p.id === openId) ?? null
 
   return (
@@ -28,19 +32,20 @@ export default function App() {
               </p>
             </div>
             <div className="relative z-20 shrink-0">
-              <TokenPanel admin={board.admin} onSignIn={board.signIn} onSignOut={board.signOut} />
+              <LoginPanel admin={board.admin} onSignIn={board.signIn} onSignOut={board.signOut} />
             </div>
           </div>
 
           <div className="mt-8">
-            <Metrics projects={board.projects} />
+            <Metrics projects={visible} />
           </div>
         </header>
 
         {board.admin && <NewProject onCreate={board.createCard} />}
+        <CategoryFilter projects={board.projects} value={category} onChange={setCategory} />
         <SchemaErrors errors={board.contentErrors} />
         <Board
-          projects={board.projects}
+          projects={visible}
           editable={board.admin !== null}
           onMove={board.moveCard}
           onOpen={setOpenId}

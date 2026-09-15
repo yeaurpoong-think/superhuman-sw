@@ -93,10 +93,19 @@ instaloader가 막혔을 때. 페이지를 열고 로그인 유도 팝업을 닫
 
 예전에는 노션 API(`POST /v1/pages`)로 저장했다. 이제는 이 레포에 커밋한다.
 
-1. `content/projects/<id>.md` 를 [`CONTRACT.md`](./CONTRACT.md) 형식으로 만든다
-2. `researched_at`에 지금 시각을 넣고 `executed_at`·`published_at`은 `null`로 둔다 → '리서치 완료' 칸에 카드가 생긴다
-3. `sources`에 원본 링크와 타입을 넣는다
-4. `npm run validate`로 형식을 확인하고 `main`에 커밋·푸시한다
+가공한 마크다운을 파이프로 넘기면 파일이 만들어진다. **frontmatter를 직접 쓰지 마라.**
+
+```bash
+cat 가공한-리서치.md | npm run new -- --title "인스타 훅 3초 구조 분해" --url "https://www.instagram.com/reel/XXXX/" --category content
+```
+
+`id`·`rank`·`researched_at` 은 명령이 계산하고, 링크 모양을 보고 `reel`/`carousel` 도 알아서 붙는다.
+카드는 '리서치 완료' 칸 맨 위에 생긴다.
+
+분류는 `agent` · `automation` · `content` · `business` · `market` 중 하나다.
+**애매하면 아예 빼라.** 억지로 끼워 맞추면 나중에 걸러 볼 때 방해만 된다.
+
+그다음 `npm run validate` 로 확인하고 `main`에 커밋·푸시한다.
 
 섹션 구조(요약·인사이트·가이드·주의사항)는 노션에 쓰던 것을 그대로 유지한다.
 

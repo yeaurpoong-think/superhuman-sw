@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { PROJECTS_DIR, REPO } from '../config'
+import { API_BASE, PROJECTS_DIR, REPO, VAULT_URL } from '../config'
 import { contentErrors, projects as baked, type ProjectRecord } from '../content'
-import { GitHubClient } from '../lib/github'
+import { ApiClient } from '../lib/api'
 import { buildFile, patchFrontmatter, splitFile } from '../lib/markdown'
 import { clearedByMove, patchForMove, rankBetween } from '../lib/move'
-import { sortByRank, stageOf, type Stage } from '../lib/schema'
+import { sortByRank, stageOf, type Category, type Stage } from '../lib/schema'
 import { applyOverlay, pruneOverlay, readOverlay, writeOverlay, type Overlay } from './overlay'
-import { clearToken, readToken, writeToken } from './token'
+import { fetchVault, openVault } from '../lib/vault'
+import { clearToken, readToken, writeToken } from './session'
 
 export type SaveState =
   | { kind: 'idle' }
@@ -14,7 +15,18 @@ export type SaveState =
   | { kind: 'deploying' }
   | { kind: 'error'; message: string }
 
-export type Admin = { token: string; login: string }
+export type Admin = { token: string }
+
+export type CardChanges = {
+  title?: string
+  body?: string
+  post_url?: string | null
+  tags?: string[]
+  category?: Category | null
+  researched_at?: string
+  executed_at?: string | null
+  published_at?: string | null
+}
 
 /** 저장 결과가 배포될 때까지 대략 이 정도 걸린다. 사용자에게 보여줄 안내용. */
 const DEPLOY_HINT_MS = 120_000
@@ -29,18 +41,20 @@ export function useBoard() {
   useEffect(() => writeOverlay(overlay), [overlay])
 
   const client = useMemo(
-    () => (admin ? new GitHubClient({ ...REPO, token: admin.token }) : null),
+    () => (admin ? new ApiClient(API_BASE, admin.token, { branch: REPO.branch }) : null),
     [admin],
   )
 
   const projects = useMemo(() => applyOverlay(baked, overlay), [overlay])
 
-  const signIn = useCallback(async (token: string, remember: boolean) => {
-    const probe = new GitHubClient({ ...REPO, token })
-    const { login, canWrite } = await probe.verify()
-    if (!canWrite) throw new Error('이 토큰으로는 레포에 쓸 수 없다. 권한 범위를 확인해라.')
+  /** 비밀번호로 금고를 열어 토큰을 꺼낸다. 비밀번호는 저장하지 않는다. */
+  const signIn = useCallback(async (password: string, remember: boolean) => {
+    const vault = await fetchVault(VAULT_URL)
+    const token = await openVault(vault, password)
+    const ok = await new ApiClient(API_BASE, token, { branch: REPO.branch }).verify()
+    if (!ok) throw new Error('금고 속 토큰으로는 이 레포에 쓸 수 없다. 토큰이 만료됐을 수 있다')
     writeToken(token, remember)
-    setAdmin({ token, login })
+    setAdmin({ token })
   }, [])
 
   const signOut = useCallback(() => {
@@ -48,15 +62,17 @@ export function useBoard() {
     setAdmin(null)
   }, [])
 
-  /** 새로고침해도 관리자 모드가 유지되게, 저장된 토큰을 한 번 확인한다. */
+  /** 새로고침해도 편집 모드가 유지되게, 저장된 토큰을 한 번 확인한다. */
   useEffect(() => {
     const token = readToken()
     if (!token) return
     let alive = true
-    new GitHubClient({ ...REPO, token })
+    new ApiClient(API_BASE, token, { branch: REPO.branch })
       .verify()
-      .then(({ login, canWrite }) => {
-        if (alive && canWrite) setAdmin({ token, login })
+      .then((ok) => {
+        if (!alive) return
+        if (ok) setAdmin({ token })
+        else clearToken()
       })
       .catch(() => clearToken())
     return () => {
@@ -114,12 +130,12 @@ export function useBoard() {
     [projects, client, commit],
   )
 
-  /** 제목·본문·발행 링크를 고친다. frontmatter는 다시 쓰지만 계약에 없는 키까지 그대로 살린다. */
+  /**
+   * 제목·본문·분류·날짜·발행 링크를 고친다.
+   * 날짜를 직접 고치면 칸도 따라 움직인다 — 칸은 날짜에서 유도되기 때문이다.
+   */
   const saveCard = useCallback(
-    async (
-      id: string,
-      changes: { title?: string; body?: string; post_url?: string | null; tags?: string[] },
-    ) => {
+    async (id: string, changes: CardChanges) => {
       const card = projects.find((p) => p.id === id)
       if (!card || !client) return
 
@@ -127,6 +143,11 @@ export function useBoard() {
       if (changes.title !== undefined) meta.title = changes.title.trim()
       if (changes.post_url !== undefined) meta.post_url = changes.post_url || null
       if (changes.tags !== undefined) meta.tags = changes.tags
+      if (changes.category !== undefined) meta.category = changes.category
+      // 리서치 날짜는 비울 수 없다. 카드가 존재한다는 건 리서치가 끝났다는 뜻이다.
+      if (changes.researched_at) meta.researched_at = changes.researched_at
+      if (changes.executed_at !== undefined) meta.executed_at = changes.executed_at
+      if (changes.published_at !== undefined) meta.published_at = changes.published_at
       const body = changes.body ?? card.body
 
       await commit(
@@ -158,6 +179,7 @@ export function useBoard() {
         tags: [] as string[],
         sources: input.url ? [{ url: input.url, type: 'link' }] : [],
         post_url: null,
+        category: null,
         researched_at: now.toISOString(),
         executed_at: null,
         published_at: null,

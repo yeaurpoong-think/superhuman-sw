@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ApiClient } from './api'
 import { decodeBase64Utf8, encodeUtf8Base64 } from './base64'
-import { GitHubClient } from './github'
 
-/** 깃허브 Contents API를 흉내 내는 가짜 서버. sha가 어긋나면 진짜처럼 409를 준다. */
+const BASE = 'https://api.example.workers.dev'
+
+/** 편집 서버를 흉내 낸다. sha가 어긋나면 진짜처럼 409를 준다. */
 function fakeServer(initial: Record<string, string> = {}) {
   const files = new Map(Object.entries(initial))
   const shas = new Map<string, string>()
@@ -28,31 +30,40 @@ function fakeServer(initial: Record<string, string> = {}) {
     const json = (status: number, body: unknown) =>
       new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
 
+    if (!href.includes('/contents/')) return json(200, { permissions: { push: true } })
+
     if (method === 'GET') {
-      if (!files.has(path)) return json(404, { message: 'Not Found' })
+      if (!files.has(path)) return json(404, { error: 'not found' })
       return json(200, { content: encodeUtf8Base64(files.get(path)!), sha: shas.get(path) })
     }
 
     if (method === 'PUT') {
       hooks.beforePut?.()
       const body = JSON.parse(String(init?.body))
-      if (shas.get(path) !== body.sha) return json(409, { message: 'sha does not match' })
+      if (shas.get(path) !== body.sha) return json(409, { error: 'sha does not match' })
       files.set(path, decodeBase64Utf8(body.content))
       bump(path)
       return json(200, { content: { sha: shas.get(path) }, commit: { sha: `commit${seq}` } })
     }
 
-    return json(500, { message: 'unexpected' })
+    return json(500, { error: 'unexpected' })
   })
 
-  return { handler, files, hooks, externalWrite, putCount: () => handler.mock.calls.filter((c) => (c[1] as RequestInit | undefined)?.method === 'PUT').length }
+  return {
+    handler,
+    files,
+    hooks,
+    externalWrite,
+    putCount: () =>
+      handler.mock.calls.filter((c) => (c[1] as RequestInit | undefined)?.method === 'PUT').length,
+  }
 }
 
 const client = (server: ReturnType<typeof fakeServer>) =>
-  new GitHubClient(
-    { owner: 'o', repo: 'r', branch: 'main', token: 't' },
-    { fetch: server.handler as unknown as typeof fetch, minWriteIntervalMs: 0 },
-  )
+  new ApiClient(BASE, 'session-token', {
+    fetch: server.handler as unknown as typeof fetch,
+    minWriteIntervalMs: 0,
+  })
 
 describe('updateFile', () => {
   let server: ReturnType<typeof fakeServer>
@@ -118,6 +129,12 @@ describe('updateFile', () => {
     ])
     expect(server.files.get('content/projects/a.md')).toBe('원본|1|2|3')
   })
+
+  it('토큰을 Bearer로 보내고 쓰기 권한을 확인한다', async () => {
+    expect(await client(server).verify()).toBe(true)
+    const headers = server.handler.mock.calls[0][1]?.headers as Record<string, string>
+    expect(headers.Authorization).toBe('Bearer session-token')
+  })
 })
 
 describe('전역 fetch 바인딩', () => {
@@ -126,11 +143,11 @@ describe('전역 fetch 바인딩', () => {
     const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(function (this: unknown) {
       seenThis.push(this)
       return Promise.resolve(
-        new Response(JSON.stringify({ login: 'x', permissions: { push: true } }), { status: 200 }),
+        new Response(JSON.stringify({ permissions: { push: true } }), { status: 200 }),
       )
     } as unknown as typeof fetch)
 
-    await new GitHubClient({ owner: 'o', repo: 'r', branch: 'main', token: 't' }).verify()
+    await new ApiClient(BASE, 'token').verify()
 
     expect(seenThis[0]).toBe(globalThis)
     spy.mockRestore()

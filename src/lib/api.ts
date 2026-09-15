@@ -3,6 +3,8 @@ import { decodeBase64Utf8, encodeUtf8Base64, utf8ByteLength } from './base64'
 /**
  * 깃허브 Contents API 클라이언트.
  *
+ * 토큰은 비밀번호로 잠긴 금고에서 방금 꺼낸 것이다. 자세한 건 vault.ts.
+ *
  * 설계상 지키는 세 가지:
  *  1) 쓰기는 한 줄로 직렬화한다. 드래그와 자동저장이 같은 sha로 동시에 PUT 하면 스스로 충돌한다.
  *  2) 변경 요청 사이에 최소 간격을 둔다. 깃허브 2차 rate limit이 분당 80건, 같은 레포는 1초 간격 권고다.
@@ -10,16 +12,8 @@ import { decodeBase64Utf8, encodeUtf8Base64, utf8ByteLength } from './base64'
  *     에이전트가 본문을 고치는 사이 내가 타임스탬프만 바꿨다면 둘 다 살아남는다.
  */
 
-const API = 'https://api.github.com'
 /** Contents API가 받아주는 본문 상한. */
 const MAX_BYTES = 1_000_000
-
-export type GitHubConfig = {
-  owner: string
-  repo: string
-  branch: string
-  token: string
-}
 
 export type FileEntry = { path: string; sha: string }
 export type FileContent = { path: string; text: string; sha: string }
@@ -28,49 +22,59 @@ export type WriteResult = { path: string; contentSha: string; commitSha: string 
 /** 현재 내용을 받아 새 내용을 돌려준다. 파일이 없으면 null이 들어온다. */
 export type Transform = (current: string | null) => string
 
+/** 전역 fetch는 window에 묶여 있다. 속성으로 꺼내 부르면 Illegal invocation이 난다. */
+const globalFetch = (): typeof fetch => fetch.bind(globalThis)
+
 /** 깃허브가 주는 상태 코드를 사람이 읽을 말로 바꾼다. */
 function explain(status: number): string {
-  if (status === 401) return '토큰이 유효하지 않다. 만료됐거나 잘못 붙여 넣었다'
-  if (status === 403) return '권한이 없거나 요청이 너무 잦다. 토큰 권한 범위를 확인해라'
-  if (status === 404) return '레포나 파일을 찾을 수 없다. 토큰이 이 레포에 접근할 수 있는지 확인해라'
+  if (status === 401) return '토큰이 더 이상 유효하지 않다. 만료됐을 수 있다'
+  if (status === 403) return '권한이 없거나 요청이 너무 잦다'
+  if (status === 404) return '파일이나 레포를 찾을 수 없다'
   if (status >= 500) return '깃허브 쪽 문제다. 잠시 뒤 다시 시도해라'
   return `응답 코드 ${status}`
 }
 
-export class GitHubError extends Error {
+export class ApiError extends Error {
   readonly status: number
 
   constructor(message: string, status: number) {
     super(message)
-    this.name = 'GitHubError'
+    this.name = 'ApiError'
     this.status = status
   }
 }
 
-export class GitHubClient {
+export class ApiClient {
+  private apiBase: string
+  private token: string
+  private branch: string
+  private opts: { minWriteIntervalMs?: number; fetch?: typeof fetch; branch?: string }
+
   private shaCache = new Map<string, string>()
   private queue: Promise<unknown> = Promise.resolve()
   private lastWriteAt = 0
 
-  private cfg: GitHubConfig
-  private opts: { minWriteIntervalMs?: number; fetch?: typeof fetch }
-
-  constructor(cfg: GitHubConfig, opts: { minWriteIntervalMs?: number; fetch?: typeof fetch } = {}) {
-    this.cfg = cfg
+  constructor(
+    apiBase: string,
+    token: string,
+    opts: { minWriteIntervalMs?: number; fetch?: typeof fetch; branch?: string } = {},
+  ) {
+    this.apiBase = apiBase
+    this.token = token
+    this.branch = opts.branch ?? 'main'
     this.opts = opts
   }
 
-  /** 전역 fetch는 window에 묶여 있다. 속성으로 꺼내 부르면 Illegal invocation이 난다. */
   private get http(): typeof fetch {
-    return this.opts.fetch ?? fetch.bind(globalThis)
+    return this.opts.fetch ?? globalFetch()
   }
 
   private async request(path: string, init: RequestInit = {}): Promise<Response> {
-    return this.http(`${API}${path}`, {
+    return this.http(`${this.apiBase}${path}`, {
       ...init,
       headers: {
         Accept: 'application/vnd.github+json',
-        Authorization: `Bearer ${this.cfg.token}`,
+        Authorization: `Bearer ${this.token}`,
         'X-GitHub-Api-Version': '2022-11-28',
         ...(init.body ? { 'Content-Type': 'application/json' } : {}),
         ...init.headers,
@@ -81,19 +85,17 @@ export class GitHubClient {
   private async json<T>(res: Response, what: string): Promise<T> {
     if (!res.ok) {
       await res.text().catch(() => '')
-      throw new GitHubError(`${what} 실패 — ${explain(res.status)}`, res.status)
+      throw new ApiError(`${what} 실패 — ${explain(res.status)}`, res.status)
     }
     return (await res.json()) as T
   }
 
-  /** 토큰이 살아 있는지, 이 레포에 쓸 수 있는지 확인한다. */
-  async verify(): Promise<{ login: string; canWrite: boolean }> {
-    const user = await this.json<{ login: string }>(await this.request('/user'), '토큰 확인')
-    const repo = await this.json<{ permissions?: { push?: boolean } }>(
-      await this.request(`/repos/${this.cfg.owner}/${this.cfg.repo}`),
-      '레포 권한 확인',
-    )
-    return { login: user.login, canWrite: repo.permissions?.push === true }
+  /** 토큰이 아직 살아 있고 이 레포에 쓸 수 있는지 확인한다. */
+  async verify(): Promise<boolean> {
+    const res = await this.request('')
+    if (!res.ok) return false
+    const repo = (await res.json()) as { permissions?: { push?: boolean } }
+    return repo.permissions?.push === true
   }
 
   /**
@@ -101,9 +103,7 @@ export class GitHubClient {
    * 쓰기 전에 반드시 이걸로 sha를 확보해야 한다.
    */
   async listDir(dir: string): Promise<FileEntry[]> {
-    const res = await this.request(
-      `/repos/${this.cfg.owner}/${this.cfg.repo}/contents/${dir}?ref=${this.cfg.branch}`,
-    )
+    const res = await this.request(`/contents/${dir}?ref=${this.branch}`)
     if (res.status === 404) return []
     const items = await this.json<{ path: string; sha: string; type: string }[]>(res, '목록 읽기')
     const files = items.filter((i) => i.type === 'file')
@@ -112,9 +112,7 @@ export class GitHubClient {
   }
 
   async getFile(path: string): Promise<FileContent | null> {
-    const res = await this.request(
-      `/repos/${this.cfg.owner}/${this.cfg.repo}/contents/${path}?ref=${this.cfg.branch}`,
-    )
+    const res = await this.request(`/contents/${path}?ref=${this.branch}`)
     if (res.status === 404) return null
     const file = await this.json<{ content: string; sha: string }>(res, '파일 읽기')
     this.shaCache.set(path, file.sha)
@@ -150,21 +148,18 @@ export class GitHubClient {
 
         const next = transform(current)
         if (utf8ByteLength(next) > MAX_BYTES) {
-          throw new GitHubError(`본문이 1MB를 넘는다: ${path}`, 413)
+          throw new ApiError(`본문이 1MB를 넘는다: ${path}`, 413)
         }
 
-        const res = await this.request(
-          `/repos/${this.cfg.owner}/${this.cfg.repo}/contents/${path}`,
-          {
-            method: 'PUT',
-            body: JSON.stringify({
-              message,
-              content: encodeUtf8Base64(next),
-              branch: this.cfg.branch,
-              ...(sha ? { sha } : {}),
-            }),
-          },
-        )
+        const res = await this.request(`/contents/${path}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            message,
+            content: encodeUtf8Base64(next),
+            branch: this.branch,
+            ...(sha ? { sha } : {}),
+          }),
+        })
 
         // 다른 쪽(에이전트나 다른 탭)이 먼저 썼다. 최신 내용으로 다시 시도한다.
         if (res.status === 409 || res.status === 422) {
@@ -179,7 +174,7 @@ export class GitHubClient {
         this.shaCache.set(path, body.content.sha)
         return { path, contentSha: body.content.sha, commitSha: body.commit.sha }
       }
-      throw new GitHubError(`충돌이 반복돼 저장하지 못했다: ${path}`, 409)
+      throw new ApiError(`충돌이 반복돼 저장하지 못했다: ${path}`, 409)
     })
   }
 
@@ -187,13 +182,10 @@ export class GitHubClient {
     return this.enqueue(async () => {
       const file = await this.getFile(path)
       if (!file) return
-      const res = await this.request(
-        `/repos/${this.cfg.owner}/${this.cfg.repo}/contents/${path}`,
-        {
-          method: 'DELETE',
-          body: JSON.stringify({ message, sha: file.sha, branch: this.cfg.branch }),
-        },
-      )
+      const res = await this.request(`/contents/${path}`, {
+        method: 'DELETE',
+        body: JSON.stringify({ message, sha: file.sha, branch: this.branch }),
+      })
       await this.json(res, '삭제')
       this.shaCache.delete(path)
     })

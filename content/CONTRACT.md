@@ -12,6 +12,7 @@
 id: instagram-hook-teardown
 title: 인스타 훅 구조 분해
 rank: a0
+category: content
 tags: [instagram, copywriting]
 sources:
   - url: https://www.instagram.com/reel/XXXX/
@@ -34,7 +35,8 @@ published_at: null
 | `title` | ✅ | 사람이 읽는 제목. 한글 자유롭게 |
 | `rank` | ✅ | 컬럼 안에서의 정렬 키. 새로 만들 때는 `a0`으로 두면 된다. 사이트에서 드래그하면 알아서 다시 매겨진다 |
 | `researched_at` | ✅ | 리서치를 끝낸 시각. ISO 8601 UTC (`2026-09-01T01:00:00Z`). 날짜만(`2026-09-01`) 써도 그날 자정으로 읽는다 |
-| `tags` | | 문자열 배열. 없으면 생략하거나 `[]` |
+| `category` | | 분류 하나. `agent`(에이전트) · `automation`(자동화) · `content`(콘텐츠) · `business`(사업 아이디어) · `market`(시장 인사이트) 중 하나. 애매하면 비워 두면 '미분류'로 들어간다. **목록에 없는 값을 쓰면 CI가 실패한다** |
+| `tags` | | 자유로운 문자열 배열. 분류와 달리 아무 말이나 써도 된다. 없으면 생략하거나 `[]` |
 | `sources` | | 리서치를 촉발한 원본 목록. `url` 필수, `type`은 `reel`·`carousel`·`article`·`video`·`link` 중 하나(기본 `link`), `title`은 선택 |
 | `post_url` | | 발행한 블로그 글 주소. 아직 없으면 `null` |
 | `executed_at` | | 실제로 해본 시점. 아직이면 `null` |
@@ -56,8 +58,25 @@ published_at: null
 
 ## 새 프로젝트를 올리는 절차
 
-1. `content/projects/<id>.md` 를 위 형식으로 만든다
-2. `npm run validate` 로 형식을 확인한다 (선택이지만 권장 — CI가 어차피 검사한다)
+**손으로 frontmatter를 짜지 마라.** `id`·`rank`·`researched_at` 은 틀리기 쉽고, 틀리면 CI가 막는다.
+아래 명령이 그 셋을 계산해 주고 계약도 미리 검사한다.
+
+```bash
+npm run new -- --title "인스타 훅 3초 구조 분해" --url "https://www.instagram.com/reel/XXXX/" --category content
+```
+
+- `--url` 은 여러 번 줄 수 있다. 인스타 주소 모양을 보고 `reel`/`carousel` 을 알아서 붙인다
+- `--tags "a,b"`, `--category` 는 선택이다. 분류가 애매하면 아예 빼라
+- 본문은 `--body-file 리서치.md` 로 주거나 파이프로 넘긴다. 아무것도 안 주면 표준 6섹션 뼈대가 들어간다
+
+```bash
+cat 리서치.md | npm run new -- --title "제목" --url "https://..."
+```
+
+그다음:
+
+1. 만들어진 파일의 본문을 채운다
+2. `npm run validate` 로 형식을 확인한다
 3. `main`에 커밋·푸시한다. 1~2분 뒤 사이트에 반영된다
 
 형식을 어긴 파일이 들어오면 CI가 실패하고, 사이트에는 그 카드가 빨간 '스키마 오류' 카드로 뜬다. 다른 카드는 멀쩡히 보인다.

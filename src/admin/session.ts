@@ -1,10 +1,10 @@
 const KEY = 'superhuman-sw:token'
 
 /**
- * 기본은 세션 저장이다.
+ * 금고에서 꺼낸 깃허브 토큰을 보관한다.
  *
- * github.io 도메인의 localStorage는 경로가 아니라 오리진 단위라,
- * 같은 계정의 다른 Pages 사이트와 저장소를 공유한다. 기본값을 창 닫으면 사라지는 쪽으로 둔다.
+ * 매번 비밀번호를 치고 600,000회 키 유도를 기다리지 않기 위한 것이다.
+ * '기억하기'를 끄면 창을 닫을 때 같이 사라진다.
  */
 export function readToken(): string | null {
   try {
@@ -25,8 +25,8 @@ export function writeToken(token: string, remember: boolean): void {
 
 export function clearToken(): void {
   try {
-    sessionStorage.removeItem(KEY)
     localStorage.removeItem(KEY)
+    sessionStorage.removeItem(KEY)
   } catch {
     // 무시
   }

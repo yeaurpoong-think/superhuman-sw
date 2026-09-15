@@ -3,6 +3,7 @@ id: _example
 title: 이 파일은 예시다
 rank: a0
 tags: [예시]
+category: agent
 sources:
   - url: https://www.instagram.com/reel/EXAMPLE/
     type: reel

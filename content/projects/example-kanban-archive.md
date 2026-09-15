@@ -3,6 +3,7 @@ id: example-kanban-archive
 title: 학습 과정을 칸반으로 추적하기
 rank: a0
 tags: [워크플로, 생산성]
+category: automation
 sources:
   - url: https://en.wikipedia.org/wiki/Kanban_board
     type: article

@@ -1,5 +1,5 @@
 import type { ProjectRecord } from '../content'
-import { stageOf } from '../lib/schema'
+import { CATEGORY_LABELS, stageOf } from '../lib/schema'
 
 const fmt = new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' })
 
@@ -30,8 +30,13 @@ export function Card({
     >
       <h3 className="text-[15px] leading-snug font-medium text-neutral-900">{project.title}</h3>
 
-      {project.tags.length > 0 && (
+      {(project.category || project.tags.length > 0) && (
         <ul className="mt-2.5 flex flex-wrap gap-1.5">
+          {project.category && (
+            <li className="rounded bg-neutral-900 px-1.5 py-0.5 text-[11px] text-white">
+              {CATEGORY_LABELS[project.category]}
+            </li>
+          )}
           {project.tags.map((tag) => (
             <li
               key={tag}

@@ -2,25 +2,41 @@ import { Suspense, lazy, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import rehypeSanitize from 'rehype-sanitize'
 import remarkGfm from 'remark-gfm'
+import type { CardChanges } from '../admin/useBoard'
 import type { ProjectRecord } from '../content'
-import { STAGE_LABELS, stageOf } from '../lib/schema'
+import { fromDateInput, toDateInput } from '../lib/dates'
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  STAGE_LABELS,
+  type Category,
+  stageOf,
+} from '../lib/schema'
+
 /** 편집기는 TipTap을 통째로 끌고 온다. 실제로 편집할 때만 받는다. */
 const Editor = lazy(() => import('./Editor').then((m) => ({ default: m.Editor })))
 
 type Props = {
   project: ProjectRecord
   editable: boolean
-  onSave: (changes: { title?: string; body?: string; post_url?: string | null }) => Promise<void>
+  onSave: (changes: CardChanges) => Promise<void>
   onClose: () => void
 }
 
 const fmt = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' })
+
+const FIELD =
+  'mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-xs outline-none focus:border-neutral-500'
 
 export function ProjectPage({ project, editable, onSave, onClose }: Props) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(project.title)
   const [body, setBody] = useState(project.body)
   const [postUrl, setPostUrl] = useState(project.post_url ?? '')
+  const [category, setCategory] = useState<Category | ''>(project.category ?? '')
+  const [researched, setResearched] = useState(toDateInput(project.researched_at))
+  const [executed, setExecuted] = useState(toDateInput(project.executed_at))
+  const [published, setPublished] = useState(toDateInput(project.published_at))
   const [raw, setRaw] = useState(false)
   const [busy, setBusy] = useState(false)
 
@@ -30,13 +46,25 @@ export function ProjectPage({ project, editable, onSave, onClose }: Props) {
     setTitle(project.title)
     setBody(project.body)
     setPostUrl(project.post_url ?? '')
+    setCategory(project.category ?? '')
+    setResearched(toDateInput(project.researched_at))
+    setExecuted(toDateInput(project.executed_at))
+    setPublished(toDateInput(project.published_at))
     setEditing(false)
   }
 
   const save = async () => {
     setBusy(true)
     try {
-      await onSave({ title, body, post_url: postUrl.trim() || null })
+      await onSave({
+        title,
+        body,
+        post_url: postUrl.trim() || null,
+        category: category || null,
+        researched_at: fromDateInput(researched) ?? project.researched_at,
+        executed_at: fromDateInput(executed),
+        published_at: fromDateInput(published),
+      })
       setEditing(false)
     } finally {
       setBusy(false)
@@ -59,6 +87,11 @@ export function ProjectPage({ project, editable, onSave, onClose }: Props) {
                 <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-600">
                   {STAGE_LABELS[stage]}
                 </span>
+                {project.category && (
+                  <span className="rounded bg-neutral-900 px-1.5 py-0.5 text-white">
+                    {CATEGORY_LABELS[project.category]}
+                  </span>
+                )}
                 <span>리서치 {fmt.format(new Date(project.researched_at))}</span>
                 {project.published_at && (
                   <span>발행 {fmt.format(new Date(project.published_at))}</span>
@@ -109,19 +142,75 @@ export function ProjectPage({ project, editable, onSave, onClose }: Props) {
           {editing ? (
             <>
               <Suspense
-                fallback={<p className="py-8 text-center text-xs text-neutral-400">편집기 불러오는 중…</p>}
+                fallback={
+                  <p className="py-8 text-center text-xs text-neutral-400">편집기 불러오는 중…</p>
+                }
               >
                 <Editor value={body} onChange={setBody} raw={raw} onToggleRaw={setRaw} />
               </Suspense>
-              <label className="mt-4 block text-xs text-neutral-500">
-                발행한 글 주소
-                <input
-                  value={postUrl}
-                  onChange={(e) => setPostUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-xs outline-none focus:border-neutral-500"
-                />
-              </label>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <label className="block text-xs text-neutral-500">
+                  분류
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value as Category | '')}
+                    className={FIELD}
+                  >
+                    <option value="">미분류</option>
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {CATEGORY_LABELS[c]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block text-xs text-neutral-500">
+                  발행한 글 주소
+                  <input
+                    value={postUrl}
+                    onChange={(e) => setPostUrl(e.target.value)}
+                    placeholder="https://..."
+                    className={FIELD}
+                  />
+                </label>
+
+                <label className="block text-xs text-neutral-500">
+                  리서치 날짜
+                  <input
+                    type="date"
+                    value={researched}
+                    onChange={(e) => setResearched(e.target.value)}
+                    className={FIELD}
+                  />
+                </label>
+
+                <label className="block text-xs text-neutral-500">
+                  실행 날짜
+                  <input
+                    type="date"
+                    value={executed}
+                    onChange={(e) => setExecuted(e.target.value)}
+                    className={FIELD}
+                  />
+                </label>
+
+                <label className="block text-xs text-neutral-500">
+                  발행 날짜
+                  <input
+                    type="date"
+                    value={published}
+                    onChange={(e) => setPublished(e.target.value)}
+                    className={FIELD}
+                  />
+                </label>
+              </div>
+
+              <p className="mt-3 text-[11px] leading-relaxed text-neutral-400">
+                칸반 위치는 이 날짜들에서 정해진다. 발행 날짜를 넣으면 콘텐츠 완료로, 비우면 실행
+                완료로 돌아간다. 칸을 끌어 옮기면 그날 날짜가 자동으로 들어간다.
+              </p>
             </>
           ) : (
             <div className="md">
@@ -134,9 +223,9 @@ export function ProjectPage({ project, editable, onSave, onClose }: Props) {
 
         {editable && (
           <footer className="flex items-center justify-between gap-3 border-t border-neutral-100 px-6 py-4">
-            <span className="text-xs text-neutral-400">{project.file}</span>
+            <span className="truncate text-xs text-neutral-400">{project.file}</span>
             {editing ? (
-              <div className="flex gap-2">
+              <div className="flex shrink-0 gap-2">
                 <button
                   type="button"
                   onClick={cancel}
@@ -157,7 +246,7 @@ export function ProjectPage({ project, editable, onSave, onClose }: Props) {
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="rounded border border-neutral-300 px-3 py-1.5 text-xs text-neutral-700 hover:bg-neutral-100"
+                className="shrink-0 rounded border border-neutral-300 px-3 py-1.5 text-xs text-neutral-700 hover:bg-neutral-100"
               >
                 편집
               </button>

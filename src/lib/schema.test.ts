@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  CATEGORIES,
+  CATEGORY_LABELS,
   averageLeadTimeDays,
+  filterByCategory,
   countsByStage,
   inFlightCount,
   parseProject,
@@ -130,5 +133,43 @@ describe('sortByRank', () => {
   it('rank가 같으면 id로 갈라 순서를 안정시킨다', () => {
     const sorted = sortByRank([p({ id: 'b', rank: 'a0' }), p({ id: 'a', rank: 'a0' })])
     expect(sorted.map((x) => x.id)).toEqual(['a', 'b'])
+  })
+})
+
+describe('category', () => {
+  it('없으면 미분류(null)로 둔다', () => {
+    const r = ok()
+    expect(r.ok).toBe(true)
+    if (r.ok) expect(r.value.category).toBeNull()
+  })
+
+  it('정해진 분류만 받는다', () => {
+    expect(ok({ category: 'agent' }).ok).toBe(true)
+    expect(ok({ category: '아무거나' }).ok).toBe(false)
+  })
+
+  it('모든 분류에 한글 이름이 있다', () => {
+    for (const c of CATEGORIES) expect(CATEGORY_LABELS[c]).toBeTruthy()
+  })
+})
+
+describe('filterByCategory', () => {
+  const p = (over: Record<string, unknown>) => {
+    const r = ok(over)
+    if (!r.ok) throw new Error('fixture invalid')
+    return r.value
+  }
+  const list = [p({ id: 'a', category: 'agent' }), p({ id: 'b', category: 'content' }), p({ id: 'c' })]
+
+  it('전체는 그대로 돌려준다', () => {
+    expect(filterByCategory(list, 'all')).toHaveLength(3)
+  })
+
+  it('분류 하나만 골라낸다', () => {
+    expect(filterByCategory(list, 'agent').map((x) => x.id)).toEqual(['a'])
+  })
+
+  it('미분류만 따로 볼 수 있다', () => {
+    expect(filterByCategory(list, 'none').map((x) => x.id)).toEqual(['c'])
   })
 })

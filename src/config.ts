@@ -5,4 +5,8 @@ export const REPO = {
 } as const
 
 export const PROJECTS_DIR = 'content/projects'
-export const TOKEN_SETTINGS_URL = 'https://github.com/settings/personal-access-tokens'
+
+export const API_BASE = `https://api.github.com/repos/${REPO.owner}/${REPO.repo}`
+
+/** vite.config.ts 의 base 와 같은 값이어야 한다. */
+export const VAULT_URL = '/superhuman-sw/vault.json'
