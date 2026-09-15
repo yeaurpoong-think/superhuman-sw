@@ -4,12 +4,12 @@
  *   npm run seal
  *
  * 토큰은 이 과정에서 화면에 찍히지 않고 디스크에도 평문으로 남지 않는다.
- * 만들어진 금고 파일은 공개되므로, 방어는 오직 비밀번호 길이에 달려 있다.
+ * 만들어진 금고 파일은 공개되므로, 방어는 오직 비밀번호 강도에 달려 있다.
  */
 import { mkdir, writeFile } from 'node:fs/promises'
 import { createInterface } from 'node:readline'
 import { resolve } from 'node:path'
-import { MIN_PASSWORD_LENGTH, sealToken } from '../src/lib/vault.ts'
+import { checkPassword, sealToken } from '../src/lib/vault.ts'
 
 const OUT = resolve(import.meta.dirname, '../public/vault.json')
 
@@ -57,10 +57,9 @@ if (!token) {
 }
 
 const password = process.env.SEAL_PASSWORD ?? (await ask('비밀번호: ', true))
-if (password.length < MIN_PASSWORD_LENGTH) {
-  console.error(
-    `비밀번호가 ${MIN_PASSWORD_LENGTH}자보다 짧다. 금고 파일이 공개되므로 짧은 비밀번호는 열린 금고나 마찬가지다.`,
-  )
+const problem = checkPassword(password)
+if (problem) {
+  console.error(problem)
   process.exit(1)
 }
 

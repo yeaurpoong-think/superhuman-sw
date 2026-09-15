@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { openVault, sealToken } from './vault'
+import { checkPassword, openVault, sealToken } from './vault'
 
 /** 테스트에서는 반복 횟수를 낮춘다. 실제 금고는 600,000회를 쓴다. */
 const FAST = 1000
@@ -37,5 +37,31 @@ describe('금고', () => {
     const vault = await sealToken('t', PASSWORD, FAST)
     expect(vault.iterations).toBe(FAST)
     expect(vault.kdf).toBe('PBKDF2-SHA256')
+  })
+})
+
+describe('비밀번호 검사', () => {
+  it('10자보다 짧으면 막는다', () => {
+    expect(checkPassword('Ab1!xyz')).toContain('10자 이상')
+  })
+
+  it('짧은데 종류가 두 가지뿐이면 막는다', () => {
+    expect(checkPassword('abcdefg123')).toContain('세 종류 이상')
+    expect(checkPassword('ABCDEFG123')).toContain('세 종류 이상')
+  })
+
+  it('10자에 세 종류를 섞으면 통과한다', () => {
+    expect(checkPassword('srb!otek23')).toBeNull()
+    expect(checkPassword('Abc!defg12')).toBeNull()
+  })
+
+  it('16자를 넘으면 종류를 따지지 않는다 — 긴 문장이 더 강하다', () => {
+    expect(checkPassword('오늘도 릴스를 뜯어본다 그리고')).toBeNull()
+    expect(checkPassword('abcdefghijklmnopq')).toBeNull()
+  })
+
+  it('딱 경계값에서도 일관되게 판단한다', () => {
+    expect(checkPassword('aB1!aB1!aB')).toBeNull()
+    expect(checkPassword('aaaaaaaaab')).toContain('세 종류 이상')
   })
 })
