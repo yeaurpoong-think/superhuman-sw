@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildFile, patchFrontmatter, splitFile } from './markdown'
+import { normalizeMarkdown, richEditorGate } from './markdown-rich'
 
 const FILE = `---
 id: a
@@ -77,5 +78,50 @@ describe('buildFile', () => {
     expect(text.startsWith('---\n')).toBe(true)
     expect(text.endsWith('본문이다\n')).toBe(true)
     expect(splitFile(text).frontmatter.id).toBe('a')
+  })
+})
+
+describe('richEditorGate', () => {
+  it('평범한 마크다운은 리치 편집기로 연다', () => {
+    expect(richEditorGate('## 제목\n\n- 하나\n- 둘\n\n**굵게** _기울임_').safe).toBe(true)
+  })
+
+  it('원시 HTML이 있으면 열지 않는다', () => {
+    const r = richEditorGate('본문\n\n<details><summary>접기</summary>내용</details>')
+    expect(r.safe).toBe(false)
+    if (!r.safe) expect(r.reason).toBe('원시 HTML')
+  })
+
+  it('각주가 있으면 열지 않는다', () => {
+    const r = richEditorGate('본문[^1]\n\n[^1]: 각주다')
+    expect(r.safe).toBe(false)
+    if (!r.safe) expect(r.reason).toBe('각주')
+  })
+
+  it('참조형 링크가 있으면 열지 않는다', () => {
+    const r = richEditorGate('[링크][ref]\n\n[ref]: https://example.com')
+    expect(r.safe).toBe(false)
+    if (!r.safe) expect(r.reason).toBe('참조형 링크')
+  })
+
+  it('표가 있으면 열지 않는다 — 편집기에 표 확장이 없어 사라진다', () => {
+    const r = richEditorGate('| a | b |\n| - | - |\n| 1 | 2 |')
+    expect(r.safe).toBe(false)
+    if (!r.safe) expect(r.reason).toBe('표')
+  })
+
+  it('코드블록 안의 HTML은 진짜 HTML이 아니므로 통과시킨다', () => {
+    expect(richEditorGate('```html\n<div>x</div>\n```').safe).toBe(true)
+  })
+})
+
+describe('normalizeMarkdown', () => {
+  it('불릿 기호를 하나로 맞춘다', () => {
+    expect(normalizeMarkdown('* 하나\n* 둘')).toContain('- 하나')
+  })
+
+  it('두 번 돌려도 같은 결과다', () => {
+    const once = normalizeMarkdown('## 제목\n\n* 하나\n\n텍스트')
+    expect(normalizeMarkdown(once)).toBe(once)
   })
 })

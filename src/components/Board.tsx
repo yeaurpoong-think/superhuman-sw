@@ -20,6 +20,7 @@ type Props = {
   projects: ProjectRecord[]
   editable: boolean
   onMove: (id: string, to: Stage, index: number) => void
+  onOpen: (id: string) => void
 }
 
 const isStage = (v: string): v is Stage => (STAGES as readonly string[]).includes(v)
@@ -53,7 +54,7 @@ function Column({
   )
 }
 
-function SortableCard({ project }: { project: ProjectRecord }) {
+function SortableCard({ project, onOpen }: { project: ProjectRecord; onOpen: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: project.id,
   })
@@ -66,12 +67,12 @@ function SortableCard({ project }: { project: ProjectRecord }) {
       {...attributes}
       {...listeners}
     >
-      <Card project={project} draggable />
+      <Card project={project} draggable onOpen={onOpen} />
     </div>
   )
 }
 
-export function Board({ projects, editable, onMove }: Props) {
+export function Board({ projects, editable, onMove, onOpen }: Props) {
   const [dragging, setDragging] = useState<ProjectRecord | null>(null)
   const counts = countsByStage(projects)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
@@ -111,11 +112,11 @@ export function Board({ projects, editable, onMove }: Props) {
           {editable ? (
             <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
               {cards.map((p) => (
-                <SortableCard key={p.id} project={p} />
+                <SortableCard key={p.id} project={p} onOpen={() => onOpen(p.id)} />
               ))}
             </SortableContext>
           ) : (
-            cards.map((p) => <Card key={p.id} project={p} />)
+            cards.map((p) => <Card key={p.id} project={p} onOpen={() => onOpen(p.id)} />)
           )}
           {cards.length === 0 && (
             <p className="px-1 py-6 text-center text-xs text-neutral-400">비어 있음</p>

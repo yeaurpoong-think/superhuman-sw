@@ -28,6 +28,15 @@ export type WriteResult = { path: string; contentSha: string; commitSha: string 
 /** 현재 내용을 받아 새 내용을 돌려준다. 파일이 없으면 null이 들어온다. */
 export type Transform = (current: string | null) => string
 
+/** 깃허브가 주는 상태 코드를 사람이 읽을 말로 바꾼다. */
+function explain(status: number): string {
+  if (status === 401) return '토큰이 유효하지 않다. 만료됐거나 잘못 붙여 넣었다'
+  if (status === 403) return '권한이 없거나 요청이 너무 잦다. 토큰 권한 범위를 확인해라'
+  if (status === 404) return '레포나 파일을 찾을 수 없다. 토큰이 이 레포에 접근할 수 있는지 확인해라'
+  if (status >= 500) return '깃허브 쪽 문제다. 잠시 뒤 다시 시도해라'
+  return `응답 코드 ${status}`
+}
+
 export class GitHubError extends Error {
   readonly status: number
 
@@ -71,8 +80,8 @@ export class GitHubClient {
 
   private async json<T>(res: Response, what: string): Promise<T> {
     if (!res.ok) {
-      const detail = await res.text().catch(() => '')
-      throw new GitHubError(`${what} 실패 (${res.status}) ${detail.slice(0, 200)}`, res.status)
+      await res.text().catch(() => '')
+      throw new GitHubError(`${what} 실패 — ${explain(res.status)}`, res.status)
     }
     return (await res.json()) as T
   }

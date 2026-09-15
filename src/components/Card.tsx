@@ -10,11 +10,24 @@ const dateOf = (p: ProjectRecord) => {
   return { label: '리서치', at: p.researched_at }
 }
 
-export function Card({ project, draggable = false }: { project: ProjectRecord; draggable?: boolean }) {
+export function Card({
+  project,
+  draggable = false,
+  onOpen,
+}: {
+  project: ProjectRecord
+  draggable?: boolean
+  onOpen?: () => void
+}) {
   const { label, at } = dateOf(project)
 
   return (
-    <article className={`rounded-lg border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-sm ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}>
+    <article
+      onClick={onOpen}
+      className={`rounded-lg border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-sm ${
+        draggable ? 'cursor-grab active:cursor-grabbing' : onOpen ? 'cursor-pointer' : ''
+      }`}
+    >
       <h3 className="text-[15px] leading-snug font-medium text-neutral-900">{project.title}</h3>
 
       {project.tags.length > 0 && (
@@ -40,6 +53,7 @@ export function Card({ project, draggable = false }: { project: ProjectRecord; d
             href={project.post_url}
             target="_blank"
             rel="noreferrer noopener"
+            onClick={(e) => e.stopPropagation()}
             className="text-neutral-500 underline decoration-neutral-300 underline-offset-2 hover:text-neutral-900"
           >
             글 보기

@@ -1,13 +1,17 @@
+import { Suspense, lazy, useState } from 'react'
 import { useBoard } from './admin/useBoard'
 import { Board } from './components/Board'
 import { Metrics } from './components/Metrics'
 import { NewProject } from './components/NewProject'
+const ProjectPage = lazy(() => import('./components/ProjectPage').then((m) => ({ default: m.ProjectPage })))
 import { SaveStatus } from './components/SaveStatus'
 import { SchemaErrors } from './components/SchemaErrors'
 import { TokenPanel } from './components/TokenPanel'
 
 export default function App() {
   const board = useBoard()
+  const [openId, setOpenId] = useState<string | null>(null)
+  const open = board.projects.find((p) => p.id === openId) ?? null
 
   return (
     <div className="min-h-dvh bg-neutral-50 text-neutral-900">
@@ -41,7 +45,12 @@ export default function App() {
 
         {board.admin && <NewProject onCreate={board.createCard} />}
         <SchemaErrors errors={board.contentErrors} />
-        <Board projects={board.projects} editable={board.admin !== null} onMove={board.moveCard} />
+        <Board
+          projects={board.projects}
+          editable={board.admin !== null}
+          onMove={board.moveCard}
+          onOpen={setOpenId}
+        />
 
         {board.admin && (
           <p className="mt-6 text-xs text-neutral-400">
@@ -49,6 +58,17 @@ export default function App() {
           </p>
         )}
       </div>
+
+      {open && (
+        <Suspense fallback={null}>
+          <ProjectPage
+            project={open}
+            editable={board.admin !== null}
+            onSave={(changes) => board.saveCard(open.id, changes)}
+            onClose={() => setOpenId(null)}
+          />
+        </Suspense>
+      )}
 
       <SaveStatus state={board.save} onDismiss={board.dismissError} />
     </div>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { PROJECTS_DIR, REPO } from '../config'
 import { contentErrors, projects as baked, type ProjectRecord } from '../content'
 import { GitHubClient } from '../lib/github'
-import { buildFile, patchFrontmatter } from '../lib/markdown'
+import { buildFile, patchFrontmatter, splitFile } from '../lib/markdown'
 import { clearedByMove, patchForMove, rankBetween } from '../lib/move'
 import { sortByRank, stageOf, type Stage } from '../lib/schema'
 import { applyOverlay, pruneOverlay, readOverlay, writeOverlay, type Overlay } from './overlay'
@@ -114,6 +114,35 @@ export function useBoard() {
     [projects, client, commit],
   )
 
+  /** 제목·본문·발행 링크를 고친다. frontmatter는 다시 쓰지만 계약에 없는 키까지 그대로 살린다. */
+  const saveCard = useCallback(
+    async (
+      id: string,
+      changes: { title?: string; body?: string; post_url?: string | null; tags?: string[] },
+    ) => {
+      const card = projects.find((p) => p.id === id)
+      if (!card || !client) return
+
+      const meta: Record<string, unknown> = {}
+      if (changes.title !== undefined) meta.title = changes.title.trim()
+      if (changes.post_url !== undefined) meta.post_url = changes.post_url || null
+      if (changes.tags !== undefined) meta.tags = changes.tags
+      const body = changes.body ?? card.body
+
+      await commit(
+        id,
+        { ...card, ...meta, body } as ProjectRecord,
+        card.file,
+        (cur) => {
+          const { frontmatter } = splitFile(cur ?? buildFile({ ...card }, card.body))
+          return buildFile({ ...frontmatter, ...meta }, body)
+        },
+        `edit: ${changes.title?.trim() ?? card.title}`,
+      )
+    },
+    [projects, client, commit],
+  )
+
   const createCard = useCallback(
     async (input: { title: string; url?: string }) => {
       if (!client) return
@@ -148,5 +177,16 @@ export function useBoard() {
     [client, projects, commit],
   )
 
-  return { projects, contentErrors, admin, signIn, signOut, save, dismissError: () => setSave({ kind: 'idle' }), moveCard, createCard }
+  return {
+    projects,
+    contentErrors,
+    admin,
+    signIn,
+    signOut,
+    save,
+    dismissError: () => setSave({ kind: 'idle' }),
+    moveCard,
+    createCard,
+    saveCard,
+  }
 }
