@@ -10,11 +10,11 @@ const dateOf = (p: ProjectRecord) => {
   return { label: '리서치', at: p.researched_at }
 }
 
-export function Card({ project }: { project: ProjectRecord }) {
+export function Card({ project, draggable = false }: { project: ProjectRecord; draggable?: boolean }) {
   const { label, at } = dateOf(project)
 
   return (
-    <article className="rounded-lg border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-sm">
+    <article className={`rounded-lg border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-sm ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}>
       <h3 className="text-[15px] leading-snug font-medium text-neutral-900">{project.title}</h3>
 
       {project.tags.length > 0 && (

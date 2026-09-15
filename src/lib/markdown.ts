@@ -32,7 +32,7 @@ function normalize(value: unknown): unknown {
 }
 
 function toYaml(frontmatter: Frontmatter): string {
-  return dump(normalize(frontmatter), { lineWidth: -1, noRefs: true, quotingType: "'" })
+  return dump(normalize(frontmatter), { lineWidth: -1, noRefs: true })
 }
 
 export function buildFile(frontmatter: Frontmatter, body: string): string {

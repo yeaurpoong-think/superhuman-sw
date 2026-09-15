@@ -29,12 +29,12 @@ export type WriteResult = { path: string; contentSha: string; commitSha: string 
 export type Transform = (current: string | null) => string
 
 export class GitHubError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-  ) {
+  readonly status: number
+
+  constructor(message: string, status: number) {
     super(message)
     this.name = 'GitHubError'
+    this.status = status
   }
 }
 
@@ -43,10 +43,13 @@ export class GitHubClient {
   private queue: Promise<unknown> = Promise.resolve()
   private lastWriteAt = 0
 
-  constructor(
-    private cfg: GitHubConfig,
-    private opts: { minWriteIntervalMs?: number; fetch?: typeof fetch } = {},
-  ) {}
+  private cfg: GitHubConfig
+  private opts: { minWriteIntervalMs?: number; fetch?: typeof fetch }
+
+  constructor(cfg: GitHubConfig, opts: { minWriteIntervalMs?: number; fetch?: typeof fetch } = {}) {
+    this.cfg = cfg
+    this.opts = opts
+  }
 
   private get http() {
     return this.opts.fetch ?? fetch
