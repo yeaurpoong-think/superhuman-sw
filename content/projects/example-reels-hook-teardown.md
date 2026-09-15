@@ -1,16 +1,18 @@
 ---
 id: example-reels-hook-teardown
 title: 릴스 훅 3초 구조 분해
-rank: a0
-tags: [instagram, 카피]
+rank: Zz
+tags:
+  - instagram
+  - 카피
 category: content
 sources:
   - url: https://www.instagram.com/reel/EXAMPLE1/
     type: reel
     title: 조회수 터진 릴스
 post_url: null
-researched_at: 2026-09-12T02:00:00Z
-executed_at: null
+researched_at: '2026-09-12T02:00:00Z'
+executed_at: '2026-09-15T11:39:56.493Z'
 published_at: null
 ---
 
