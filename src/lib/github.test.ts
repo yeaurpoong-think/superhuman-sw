@@ -119,3 +119,20 @@ describe('updateFile', () => {
     expect(server.files.get('content/projects/a.md')).toBe('원본|1|2|3')
   })
 })
+
+describe('전역 fetch 바인딩', () => {
+  it('window 바인딩을 잃지 않는다 — 잃으면 브라우저에서 Illegal invocation이 난다', async () => {
+    const seenThis: unknown[] = []
+    const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(function (this: unknown) {
+      seenThis.push(this)
+      return Promise.resolve(
+        new Response(JSON.stringify({ login: 'x', permissions: { push: true } }), { status: 200 }),
+      )
+    } as unknown as typeof fetch)
+
+    await new GitHubClient({ owner: 'o', repo: 'r', branch: 'main', token: 't' }).verify()
+
+    expect(seenThis[0]).toBe(globalThis)
+    spy.mockRestore()
+  })
+})

@@ -51,8 +51,9 @@ export class GitHubClient {
     this.opts = opts
   }
 
-  private get http() {
-    return this.opts.fetch ?? fetch
+  /** 전역 fetch는 window에 묶여 있다. 속성으로 꺼내 부르면 Illegal invocation이 난다. */
+  private get http(): typeof fetch {
+    return this.opts.fetch ?? fetch.bind(globalThis)
   }
 
   private async request(path: string, init: RequestInit = {}): Promise<Response> {
