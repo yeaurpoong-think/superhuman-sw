@@ -31,7 +31,7 @@ cat 리서치.md | npm run new -- --title "제목" --url "https://..."
 
 - 칸반 컬럼은 저장하지 않는다. `researched_at` / `executed_at` / `published_at` 에서 유도한다. `status` 필드를 만들지 마라
 - `id`는 파일명과 같아야 하고 영구히 바꾸지 않는다
-- `category`는 `agent` · `automation` · `content` · `business` · `market` 다섯 중 하나다. 애매하면 비운다. 새 값을 지어내면 CI가 실패한다
+- `category`는 `agent` · `automation` · `content` · `business` · `market` · `marketing` 여섯 중 하나다. 애매하면 비운다. 새 값을 지어내면 CI가 실패한다
 - frontmatter에 주석을 쓰지 마라. 사이트에서 편집·저장하면 사라진다
 - 토큰·쿠키·세션 값은 절대 커밋하지 않는다. 퍼블릭 레포다. 깃허브 토큰은 비밀번호로 잠근 `public/vault.json` 에만 둔다
 

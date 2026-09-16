@@ -102,7 +102,7 @@ cat 가공한-리서치.md | npm run new -- --title "인스타 훅 3초 구조 �
 `id`·`rank`·`researched_at` 은 명령이 계산하고, 링크 모양을 보고 `reel`/`carousel` 도 알아서 붙는다.
 카드는 '리서치 완료' 칸 맨 위에 생긴다.
 
-분류는 `agent` · `automation` · `content` · `business` · `market` 중 하나다.
+분류는 `agent` · `automation` · `content` · `business` · `market` · `marketing` 중 하나다.
 **애매하면 아예 빼라.** 억지로 끼워 맞추면 나중에 걸러 볼 때 방해만 된다.
 
 그다음 `npm run validate` 로 확인하고 `main`에 커밋·푸시한다.

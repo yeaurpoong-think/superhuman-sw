@@ -18,7 +18,7 @@ export const SourceSchema = z.looseObject({
 })
 
 /** 리서치를 갈라 보는 분류. 하나만 고른다. */
-export const CATEGORIES = ['agent', 'automation', 'content', 'business', 'market'] as const
+export const CATEGORIES = ['agent', 'automation', 'content', 'business', 'market', 'marketing'] as const
 
 export type Category = (typeof CATEGORIES)[number]
 
@@ -28,6 +28,7 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   content: '콘텐츠',
   business: '사업 아이디어',
   market: '시장 인사이트',
+  marketing: '마케팅',
 }
 
 /**

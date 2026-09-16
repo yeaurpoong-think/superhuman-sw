@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react'
 import { useBoard } from './admin/useBoard'
 import { Board } from './components/Board'
 import { CategoryFilter, type CategoryFilterValue } from './components/CategoryFilter'
@@ -10,6 +10,15 @@ import { SaveStatus } from './components/SaveStatus'
 import { SchemaErrors } from './components/SchemaErrors'
 import { REPO } from './config'
 import { filterByCategory, partitionByKind } from './lib/schema'
+import {
+  WINDOW_WIDTH,
+  bringToFront,
+  closeWindow,
+  frontWindow,
+  moveWindow,
+  openWindow,
+  type WindowState,
+} from './lib/windows'
 
 const ProjectPage = lazy(() =>
   import('./components/ProjectPage').then((m) => ({ default: m.ProjectPage })),
@@ -17,12 +26,35 @@ const ProjectPage = lazy(() =>
 
 export default function App() {
   const board = useBoard()
-  const [openId, setOpenId] = useState<string | null>(null)
+  const [windows, setWindows] = useState<WindowState[]>([])
   const [category, setCategory] = useState<CategoryFilterValue>('all')
 
-  const open = board.projects.find((p) => p.id === openId) ?? null
+  const front = frontWindow(windows)
   const visible = filterByCategory(board.projects, category)
   const { board: boardCards, references } = partitionByKind(visible)
+
+  const [vw, setVw] = useState(() => (typeof window === 'undefined' ? 1440 : window.innerWidth))
+  /** 창은 화면보다 넓을 수 없다. 좁은 모니터에서는 같이 줄어든다. */
+  const windowWidth = Math.min(WINDOW_WIDTH, Math.max(320, vw - 48))
+
+  const viewport = () => ({ width: window.innerWidth, height: window.innerHeight })
+
+  const openCard = useCallback((id: string) => {
+    setWindows((list) => openWindow(list, id, viewport(), windowWidth))
+  }, [])
+
+  /** 화면을 줄였을 때 창이 바깥에 갇히지 않도록 다시 안으로 끌어당긴다. */
+  useEffect(() => {
+    const onResize = () => {
+      setVw(window.innerWidth)
+      const width = Math.min(WINDOW_WIDTH, Math.max(320, window.innerWidth - 48))
+      setWindows((list) =>
+        list.reduce((acc, w) => moveWindow(acc, w.id, w.x, w.y, viewport(), width), list),
+      )
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   return (
     <div className="min-h-dvh px-3 py-4 md:px-6 md:py-10">
@@ -83,11 +115,11 @@ export default function App() {
               projects={boardCards}
               editable={board.admin !== null}
               onMove={board.moveCard}
-              onOpen={setOpenId}
+              onOpen={openCard}
             />
           )}
 
-          <ReferenceShelf projects={references} onOpen={setOpenId} />
+          <ReferenceShelf projects={references} onOpen={openCard} />
         </main>
 
         <footer className="mt-14 flex flex-wrap items-center justify-between gap-2 border-t border-rule-soft pt-5">
@@ -100,17 +132,43 @@ export default function App() {
         </footer>
       </div>
 
-      {open && (
-        <Suspense fallback={null}>
-          <ProjectPage
-            project={open}
-            editable={board.admin !== null}
-            onSave={(changes) => board.saveCard(open.id, changes)}
-            onDelete={board.deleteCard}
-            onUploadImage={board.uploadImage}
-            onClose={() => setOpenId(null)}
-          />
-        </Suspense>
+      <Suspense fallback={null}>
+        {windows.map((w) => {
+          const project = board.projects.find((p) => p.id === w.id)
+          if (!project) return null
+          return (
+            <ProjectPage
+              key={w.id}
+              project={project}
+              editable={board.admin !== null}
+              onSave={(changes) => board.saveCard(w.id, changes)}
+              onDelete={board.deleteCard}
+              onUploadImage={board.uploadImage}
+              onClose={() => setWindows((list) => closeWindow(list, w.id))}
+              x={w.x}
+              y={w.y}
+              z={w.z}
+              isFront={front?.id === w.id}
+              width={windowWidth}
+              onFocus={() => setWindows((list) => bringToFront(list, w.id))}
+              onMove={(x, y) =>
+                setWindows((list) => moveWindow(list, w.id, x, y, viewport(), windowWidth))
+              }
+            />
+          )
+        })}
+      </Suspense>
+
+      {windows.length > 1 && (
+        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+          <button
+            type="button"
+            onClick={() => setWindows([])}
+            className="label flex min-h-11 items-center border border-rule bg-leaf px-4 shadow-lg hover:text-ink"
+          >
+            열어 둔 창 {windows.length} · 모두 닫기
+          </button>
+        </div>
       )}
 
       <SaveStatus state={board.save} onDismiss={board.dismissError} />

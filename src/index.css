@@ -52,8 +52,8 @@ body::before {
 /* 목록 정보. 작고 넓게 벌린 대문자. 본문 대비 기준(4.5:1)을 지키는 색만 쓴다. */
 .label {
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-muted);
 }

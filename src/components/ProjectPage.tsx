@@ -25,6 +25,14 @@ type Props = {
   onDelete: (id: string) => Promise<void>
   onUploadImage: (file: File) => Promise<string>
   onClose: () => void
+  /** 창 자리와 겹침 순서. 여러 장을 동시에 펼쳐 보기 위한 것이다. */
+  x: number
+  y: number
+  z: number
+  isFront: boolean
+  width: number
+  onMove: (x: number, y: number) => void
+  onFocus: () => void
 }
 
 const fmt = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' })
@@ -37,7 +45,21 @@ const KIND_LABELS: Record<Kind, string> = {
 const FIELD =
   'mt-1 w-full rounded border border-rule px-2 py-1.5 text-xs focus:border-accent'
 
-export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage, onClose }: Props) {
+export function ProjectPage({
+  project,
+  editable,
+  onSave,
+  onDelete,
+  onUploadImage,
+  onClose,
+  x,
+  y,
+  z,
+  isFront,
+  width,
+  onMove,
+  onFocus,
+}: Props) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(project.title)
   const [body, setBody] = useState(project.body)
@@ -53,46 +75,56 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
   const stage = stageOf(project)
   const panelRef = useRef<HTMLDivElement>(null)
 
-  /** 열릴 때 포커스를 판 안으로 넣고, 닫히면 원래 있던 자리로 돌려놓는다. */
+  /** 좁은 화면에서는 끌어 옮길 자리가 없다. 그때는 화면을 가득 채운다. */
+  const [floating, setFloating] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches,
+  )
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const sync = () => setFloating(mq.matches)
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  /** 열릴 때 창으로 포커스를 넣고, 닫히면 원래 있던 자리로 돌려놓는다. */
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null
     panelRef.current?.focus()
-    const bodyOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = bodyOverflow
-      opener?.focus?.()
-    }
+    return () => opener?.focus?.()
   }, [])
 
-  /** 열린 동안 Tab은 판 안에서만 돌고, Esc로 물러난다. */
+  /** Esc는 맨 앞 창에만 듣는다. 여러 장이 열려 있어도 한 번에 하나씩 닫힌다. */
   useEffect(() => {
+    if (!isFront) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        // 편집 중이라면 편집만 물린다. 쓰던 글을 한 번에 날리지 않는다.
-        if (editing) cancelRef.current()
-        else onClose()
-        return
-      }
-      if (e.key !== 'Tab') return
-      const items = panelRef.current?.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])',
-      )
-      if (!items || items.length === 0) return
-      const first = items[0]
-      const last = items[items.length - 1]
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault()
-        last.focus()
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault()
-        first.focus()
-      }
+      if (e.key !== 'Escape') return
+      e.preventDefault()
+      // 편집 중이라면 편집만 물린다. 쓰던 글을 한 번에 날리지 않는다.
+      if (editing) cancelRef.current()
+      else onClose()
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [editing, onClose])
+  }, [isFront, editing, onClose])
+
+  /** 제목줄을 잡아 끈다. 줄 안의 버튼·링크를 눌렀을 때는 끌지 않는다. */
+  const startDrag = (e: React.PointerEvent<HTMLElement>) => {
+    if (!floating || e.button !== 0) return
+    if ((e.target as HTMLElement).closest('button, a, input, select, textarea')) return
+
+    const dx = e.clientX - x
+    const dy = e.clientY - y
+    // 문서에 붙여 둔다. 빠르게 끌다 커서가 창 밖으로 나가도 놓치지 않는다.
+    const move = (ev: PointerEvent) => onMove(ev.clientX - dx, ev.clientY - dy)
+    const stop = () => {
+      document.removeEventListener('pointermove', move)
+      document.removeEventListener('pointerup', stop)
+      document.removeEventListener('pointercancel', stop)
+    }
+    document.addEventListener('pointermove', move)
+    document.addEventListener('pointerup', stop)
+    document.addEventListener('pointercancel', stop)
+  }
 
   const cancelRef = useRef<() => void>(() => {})
 
@@ -141,21 +173,31 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
     }
   }
 
+  const titleId = `project-title-${project.id}`
+
   return (
     <div
-      className="fixed inset-0 z-40 overflow-y-auto bg-shell/70 p-3 md:p-10"
-      onClick={onClose}
+      ref={panelRef}
+      role="dialog"
+      aria-labelledby={titleId}
+      tabIndex={-1}
+      onPointerDown={onFocus}
+      style={
+        floating
+          ? { left: x, top: y, zIndex: z, width, maxHeight: `calc(100dvh - ${y + 24}px)` }
+          : { zIndex: z }
+      }
+      className={`sheet fixed flex flex-col focus:outline-none ${
+        floating ? 'shadow-[0_24px_60px_-20px_rgba(0,0,0,0.6)]' : 'inset-x-2 top-3 bottom-3'
+      }`}
     >
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="project-title"
-        tabIndex={-1}
-        className="sheet mx-auto max-w-3xl focus:outline-none"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <header className="border-b border-rule px-6 py-6 md:px-9">
+      <div className="flex min-h-0 flex-1 flex-col">
+        <header
+          onPointerDown={startDrag}
+          className={`shrink-0 border-b border-rule px-6 py-6 md:px-9 ${
+            floating ? 'cursor-grab active:cursor-grabbing' : ''
+          }`}
+        >
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
@@ -178,7 +220,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
                   className="mt-3 w-full border border-rule bg-leaf px-2 py-1.5 font-display text-xl focus:border-accent"
                 />
               ) : (
-                <h2 id="project-title" className="mt-3 font-display text-2xl leading-snug tracking-tight text-ink">
+                <h2 id={titleId} className="mt-3 font-display text-2xl leading-snug tracking-tight text-ink">
                   {project.title}
                 </h2>
               )}
@@ -211,7 +253,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
           )}
         </header>
 
-        <div className="px-6 py-7 md:px-9">
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-7 md:px-9">
           {editing ? (
             <>
               <Suspense
@@ -317,7 +359,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
         </div>
 
         {editable && (
-          <footer className="flex items-center justify-between gap-3 border-t border-rule px-6 py-4 md:px-9">
+          <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-rule px-6 py-4 md:px-9">
             <button
               type="button"
               onClick={remove}

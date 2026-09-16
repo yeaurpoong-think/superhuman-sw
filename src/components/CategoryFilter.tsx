@@ -38,7 +38,7 @@ export function CategoryFilter({ projects, value, onChange }: Props) {
               selected ? 'border-accent text-ink' : 'border-transparent text-muted hover:text-ink'
             } ${count === 0 && !selected ? 'opacity-40' : ''}`}
           >
-            <span className="font-serif text-sm">{label}</span>
+            <span className="font-serif text-[15px] md:text-base">{label}</span>
             <span className="label ml-1.5 align-middle">{count}</span>
           </button>
         )

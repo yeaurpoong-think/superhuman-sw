@@ -44,13 +44,14 @@ function Shelf({
       ref={setNodeRef}
       className={`transition-colors ${isOver ? 'bg-accent/[0.06]' : ''}`}
     >
-      <header className="rule-double flex items-baseline justify-between pb-2">
-        <h2 className="label text-ink-soft">{STAGE_LABELS[stage]}</h2>
-        <span className="font-display text-base leading-none text-ink-soft tabular-nums">
-          {count}
-        </span>
+      {/* 서가 이름표. 멀리서도 어느 칸인지 바로 보이게 테를 둘러 붙인다. */}
+      <header className="flex items-center justify-between gap-3 border border-rule bg-accent/[0.07] px-4 py-3">
+        <h2 className="font-display text-[17px] leading-none text-ink md:text-lg">
+          {STAGE_LABELS[stage]}
+        </h2>
+        <span className="font-display text-xl leading-none text-accent tabular-nums">{count}</span>
       </header>
-      <div className="flex min-h-24 flex-col gap-2.5 pt-3">{children}</div>
+      <div className="flex min-h-24 flex-col gap-2.5 pt-4">{children}</div>
     </section>
   )
 }

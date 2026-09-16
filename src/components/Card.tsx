@@ -44,7 +44,7 @@ export function Card({
         )}
       </div>
 
-      <h3 className="mt-2 font-serif text-[16px] leading-snug text-ink">
+      <h3 className="mt-2 font-serif text-[17px] leading-snug text-ink md:text-[18px]">
         {onOpen ? (
           /* 카드 전체가 눌리면서도 키보드로 닿는다. 넓힌 판이 카드를 덮는다. */
           <button
@@ -60,7 +60,7 @@ export function Card({
       </h3>
 
       {project.tags.length > 0 && (
-        <p className="mt-2 text-[11px] text-muted">{project.tags.map((t) => `#${t}`).join('  ')}</p>
+        <p className="mt-2 text-[13px] text-muted">{project.tags.map((t) => `#${t}`).join('  ')}</p>
       )}
 
       <div className="mt-3 flex items-center gap-3 border-t border-rule-soft pt-2">
