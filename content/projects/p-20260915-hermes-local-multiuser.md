@@ -1,7 +1,7 @@
 ---
 id: p-20260915-hermes-local-multiuser
 title: 헤르메스 로컬 컴퓨터에서 여러 명이 함께 쓰기 (프로필 세팅 가이드)
-rank: Zx
+rank: Zy
 category: agent
 tags:
   - hermes
@@ -11,19 +11,19 @@ tags:
   - multi-user
   - family
 sources:
-  - url: 'https://hermes-agent.nousresearch.com/docs/user-guide/profiles'
+  - url: https://hermes-agent.nousresearch.com/docs/user-guide/profiles
     type: link
     title: Profiles — Running Multiple Agents (공식 문서)
-  - url: 'https://hermes-agent.nousresearch.com/docs/user-guide/multi-profile-gateways'
+  - url: https://hermes-agent.nousresearch.com/docs/user-guide/multi-profile-gateways
     type: link
     title: Running Many Gateways at Once (공식 문서)
-  - url: 'https://hermes-agent.nousresearch.com/docs/user-guide/windows-native'
+  - url: https://hermes-agent.nousresearch.com/docs/user-guide/windows-native
     type: link
     title: Windows (Native) Guide (공식 문서)
 post_url: null
 researched_at: '2026-09-15T13:00:00.000Z'
 executed_at: null
-published_at: null
+published_at: '2026-09-16T05:10:16.708Z'
 ---
 
 ## 🎯 핵심 요약
