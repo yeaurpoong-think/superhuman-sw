@@ -36,10 +36,15 @@ describe('heroCues', () => {
     expect(heroCues(0.64).line).toBe(0)
   })
 
-  it('종이가 화면을 덮는 구간에는 글자가 하나도 없다', () => {
+  it('통로 구간에는 종이 글이 아직 없다', () => {
+    expect(heroCues(HERO_BEATS.finaleStarts).paper).toBe(0)
+  })
+
+  it('종이가 덮이면 통로용 글자는 사라지고 종이 위 글만 남는다', () => {
     const c = heroCues(HERO_BEATS.covered)
     expect(c.title).toBe(0)
     expect(c.line).toBe(0)
+    expect(c.paper).toBe(1)
   })
 
   it('어두운 막은 종이가 덮이기 전에 완전히 걷힌다 — 남으면 배경으로 넘어갈 때 밝기가 튄다', () => {
@@ -48,7 +53,7 @@ describe('heroCues', () => {
     expect(heroCues(1).overlay).toBe(0)
   })
 
-  it('끝에서는 화면에 아무것도 얹히지 않는다 — 정지 배경과 같아야 한다', () => {
+  it('끝에서는 어두운 막이 완전히 걷힌다 — 정지 배경과 밝기가 같아야 한다', () => {
     const c = heroCues(1)
     expect(c.title).toBe(0)
     expect(c.line).toBe(0)
@@ -58,7 +63,7 @@ describe('heroCues', () => {
   it('모든 값이 0과 1 사이를 벗어나지 않는다', () => {
     for (let p = 0; p <= 1.0001; p += 0.02) {
       const c = heroCues(p)
-      for (const v of [c.title, c.line, c.overlay]) {
+      for (const v of [c.title, c.line, c.paper, c.overlay]) {
         expect(v).toBeGreaterThanOrEqual(0)
         expect(v).toBeLessThanOrEqual(1)
       }

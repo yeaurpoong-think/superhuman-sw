@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* 손으로 쓴 표제용. 라틴은 고서체, 한글은 독도체가 받는다. 직접 담아 두어 외부 요청이 없다. */
+@import "./styles/font-grenze.css";
+@import "./styles/font-dokdo.css";
+
 /*
  * 어두운 서재 바닥 위에 종이 한 장을 펼쳐 둔 구성.
  * 표제와 본문은 세리프로, 분류·날짜·번호 같은 목록 정보는 모노로 적는다.
@@ -20,6 +24,11 @@
     "Times New Roman", serif;
   --font-serif: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  /*
+   * 큰 표제에만 쓴다. 본문에 쓰면 읽기가 급격히 나빠진다.
+   * Grenze Gotisch 에는 한글이 없어 한글은 자동으로 독도체가 받는다.
+   */
+  --font-hand: "Grenze Gotisch", "Dokdo", "Iowan Old Style", Georgia, serif;
 }
 
 body {
