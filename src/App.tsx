@@ -33,24 +33,20 @@ export default function App() {
         본문으로 건너뛰기
       </a>
 
-      {route === 'home' ? (
-        <>
-          {/* 히어로 위에 얹는다. 영상이 메뉴 뒤로 흘러가게 둔다. */}
-          <div className="fixed inset-x-0 top-0 z-40 px-5 md:px-10">
-            <div className="mx-auto max-w-6xl">
-              <SiteNav route={route} onNavigate={navigate} />
-            </div>
-          </div>
-          <Home onNavigate={navigate} />
-        </>
-      ) : (
-        <div className="px-3 pt-2 md:px-6 md:pt-4">
-          <div className="mx-auto max-w-6xl px-2 md:px-8">
+      {/*
+        메뉴는 두 페이지에서 같은 자리에 있어야 한다.
+        아래 종이(sheet)와 같은 바깥 여백·같은 최대폭을 써서 좌우 끝을 맞춘다.
+        홈에서는 영상 위에 떠 있고, 서고에서는 종이 위에 놓인다는 것만 다르다.
+      */}
+      <div className={route === 'home' ? 'fixed inset-x-0 top-0 z-40' : ''}>
+        <div className="px-3 md:px-6">
+          <div className="mx-auto max-w-6xl">
             <SiteNav route={route} onNavigate={navigate} />
           </div>
-          <Library />
         </div>
-      )}
+      </div>
+
+      {route === 'home' ? <Home onNavigate={navigate} /> : <Library />}
     </div>
   )
 }

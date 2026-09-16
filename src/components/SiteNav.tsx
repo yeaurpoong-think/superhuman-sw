@@ -23,7 +23,7 @@ export function SiteNav({ route, onNavigate }: Props) {
   return (
     <nav
       aria-label="사이트 메뉴"
-      className="flex items-center justify-between gap-6 px-1 py-4 text-paper/70"
+      className="flex items-center justify-between gap-6 py-4 text-paper/70"
     >
       <a
         href={pathForRoute('home')}
