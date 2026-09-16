@@ -3,12 +3,15 @@ id: video-prompt-libraries-3-cinematique-emotion-youmind
 title: 영상 제작용 무료 프롬프트 자료실 3곳
 rank: Zz
 category: content
-tags: [ai-trend, prompt, design-resource]
+tags:
+  - ai-trend
+  - prompt
+  - design-resource
 sources:
-  - url: 'https://www.instagram.com/p/DdJDCr_FEzd/'
+  - url: https://www.instagram.com/p/DdJDCr_FEzd/
     type: carousel
 post_url: null
-researched_at: '2026-09-15T11:58:06.353Z'
+researched_at: '2026-09-14T15:00:00.000Z'
 executed_at: null
 published_at: null
 ---
