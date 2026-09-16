@@ -365,21 +365,7 @@ export function ProjectPage({
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 @lg:px-8 @lg:py-7">
           {editing ? (
             <>
-              <Suspense
-                fallback={
-                  <p className="py-8 text-center text-xs text-muted">편집기 불러오는 중…</p>
-                }
-              >
-                <Editor
-                  value={body}
-                  onChange={setBody}
-                  raw={raw}
-                  onToggleRaw={setRaw}
-                  onUploadImage={onUploadImage}
-                />
-              </Suspense>
-
-              <div className="mt-5 grid gap-3 @xl:grid-cols-2">
+              <div className="grid gap-3 @xl:grid-cols-2">
                 <label className="block text-xs text-muted">
                   종류
                   <select
@@ -454,9 +440,25 @@ export function ProjectPage({
 
               <p className="mt-3 text-[11px] leading-relaxed text-muted">
                 종류를 "레퍼런스"로 바꾸면 칸반 보드가 아니라 그 아래 레퍼런스 서가에 쌓입니다.
-                "프로젝트"인 카드는 칸반 위치가 아래 날짜들에서 정해집니다. 발행 날짜를 넣으면 콘텐츠
+                "프로젝트"인 카드는 칸반 위치가 이 날짜들에서 정해집니다. 발행 날짜를 넣으면 콘텐츠
                 완료로, 비우면 실행 완료로 돌아갑니다. 칸을 끌어 옮기면 그날 날짜가 자동으로 들어갑니다.
               </p>
+              {/* 머리 정보를 먼저, 본문은 그 아래. 칸반 위치를 정하는 값이 위에 있어야 한다. */}
+              <div className="mt-6 border-t border-rule pt-6">
+                <Suspense
+                  fallback={
+                    <p className="py-8 text-center text-xs text-muted">편집기 불러오는 중…</p>
+                  }
+                >
+                  <Editor
+                    value={body}
+                    onChange={setBody}
+                    raw={raw}
+                    onToggleRaw={setRaw}
+                    onUploadImage={onUploadImage}
+                  />
+                </Suspense>
+              </div>
             </>
           ) : (
             <div className="md">
