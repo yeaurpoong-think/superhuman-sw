@@ -45,7 +45,7 @@ function Shelf({
       className={`transition-colors ${isOver ? 'bg-accent/[0.06]' : ''}`}
     >
       {/* 서가 이름표. 멀리서도 어느 칸인지 바로 보이게 테를 둘러 붙인다. */}
-      <header className="flex items-center justify-between gap-3 border border-rule bg-accent/[0.07] px-4 py-3">
+      <header className="flex items-center justify-between gap-3 border border-white/40 bg-leaf/60 px-4 py-3">
         <h2 className="font-display text-[17px] leading-none text-ink md:text-lg">
           {STAGE_LABELS[stage]}
         </h2>

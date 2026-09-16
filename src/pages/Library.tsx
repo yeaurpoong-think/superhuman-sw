@@ -9,6 +9,7 @@ import { ReferenceShelf } from '../components/ReferenceShelf'
 import { SaveStatus } from '../components/SaveStatus'
 import { SchemaErrors } from '../components/SchemaErrors'
 import { LIBRARY_BG, REPO } from '../config'
+import { tie } from '../lib/korean'
 import { filterByCategory, partitionByKind } from '../lib/schema'
 import {
   bringToFront,
@@ -51,15 +52,22 @@ export function Library() {
     <div className="px-3 pb-4 md:px-6 md:pb-10">
       {/*
         종이 뒤로 비치는 서가. 스크롤 중 잔상을 남기지 않도록 배경 이미지가 아니라
-        고정 레이어로 깐다. 위쪽 메뉴 글자가 이 위에 그대로 앉으므로 어둡게 눌러 둔다.
+        고정 레이어로 깐다.
+
+        사진 위치가 중요하다. 처음에 top 으로 두었더니 천장 쪽 서가만 잘려 보여
+        도서관인 줄 알 수가 없었다. 둥근 서가가 휘어 도는 가운데 띠가 이 사진의
+        전부이므로 center 로 잡아 그 띠를 화면 한가운데 둔다.
+
+        판이 화면 폭을 거의 다 덮으므로, 사진은 판 뒤에서 비쳐야 보인다.
+        그래서 판은 유리로, 사진은 아래 어둡게 깔되 가운데는 덜 누른다.
       */}
       <div aria-hidden className="fixed inset-0 -z-10 bg-shell">
         <div
-          className="absolute inset-0 bg-cover bg-top bg-no-repeat opacity-40"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-90"
           style={{ backgroundImage: `url(${LIBRARY_BG})` }}
         />
         {/* 맨 위는 더 눌러 둔다. 메뉴 글자가 사진의 밝은 서가에 걸리면 읽히지 않는다. */}
-        <div className="absolute inset-0 bg-gradient-to-b from-shell/90 via-shell/50 to-shell/65" />
+        <div className="absolute inset-0 bg-gradient-to-b from-shell/88 via-shell/30 to-shell/55" />
       </div>
 
       <a
@@ -78,7 +86,7 @@ export function Library() {
             서고
           </h1>
           <p className="mt-3 font-serif text-sm text-ink-soft md:text-base">
-            리서치에서 시작해 직접 해보고, 콘텐츠로 끝맺습니다.
+            {tie('리서치에서 시작해 직접 해보고, 콘텐츠로 끝맺습니다.')}
           </p>
 
           <div aria-hidden className="mx-auto mt-7 h-px w-16 bg-accent/50" />
@@ -104,7 +112,7 @@ export function Library() {
           <SchemaErrors errors={board.contentErrors} />
           {boardCards.length === 0 && references.length === 0 && board.projects.length > 0 ? (
             <div className="border border-dashed border-rule py-16 text-center">
-              <p className="font-serif text-ink-soft">이 분류에는 아직 꽂힌 것이 없습니다.</p>
+              <p className="font-serif text-ink-soft">{tie('이 분류에는 아직 꽂힌 것이 없습니다.')}</p>
               <button
                 type="button"
                 onClick={() => setCategory('all')}
@@ -130,7 +138,7 @@ export function Library() {
             {REPO.owner} / {REPO.repo}
           </span>
           {board.admin && (
-            <span className="label">카드를 끌어 옮기면 날짜가 기록되고 서고에 반영됩니다</span>
+            <span className="label">{tie('카드를 끌어 옮기면 날짜가 기록되고 서고에 반영됩니다')}</span>
           )}
         </footer>
       </div>

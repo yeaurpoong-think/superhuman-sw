@@ -1,4 +1,5 @@
 import type { ProjectRecord } from '../content'
+import { tie } from '../lib/korean'
 import { CATEGORY_LABELS, stageOf } from '../lib/schema'
 
 const fmt = new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' })
@@ -27,7 +28,7 @@ export function Card({
 
   return (
     <article
-      className={`group relative border border-rule bg-leaf px-4 pt-3.5 pb-3 transition-shadow hover:shadow-[0_2px_10px_-4px_rgba(60,45,20,0.35)] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
+      className={`group relative border border-white/40 bg-leaf/85 px-4 pt-3.5 pb-3 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset] transition-shadow hover:shadow-[0_2px_10px_-4px_rgba(60,45,20,0.35)] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
         draggable ? 'cursor-grab active:cursor-grabbing' : ''
       }`}
     >
@@ -52,10 +53,10 @@ export function Card({
             onClick={onOpen}
             className="text-left after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
           >
-            {project.title}
+            {tie(project.title)}
           </button>
         ) : (
-          project.title
+          tie(project.title)
         )}
       </h3>
 
