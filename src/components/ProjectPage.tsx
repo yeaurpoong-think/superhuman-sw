@@ -292,13 +292,56 @@ export function ProjectPage({
               )}
             </div>
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="shrink-0 rounded px-2 py-1 text-xs text-muted hover:bg-accent/10"
-            >
-              닫기
-            </button>
+            {/*
+              카드를 고치는 단추는 제목 옆 맨 위에 둔다. 아래에 있으면 본문이 긴
+              카드에서 끝까지 굴려 내려가야 편집을 누를 수 있었다.
+            */}
+            <div className="flex shrink-0 items-center gap-2">
+              {editable &&
+                (editing ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={remove}
+                      disabled={busy}
+                      className="rounded px-2 py-1.5 text-xs text-muted hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                    >
+                      지우기
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancel}
+                      className="rounded px-3 py-1.5 text-xs text-muted hover:bg-accent/10"
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="button"
+                      onClick={save}
+                      disabled={busy}
+                      className="rounded bg-ink px-3 py-1.5 text-xs text-white disabled:opacity-40"
+                    >
+                      {busy ? '저장 중' : '저장'}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setEditing(true)}
+                    className="rounded border border-rule px-3 py-1.5 text-xs text-ink hover:bg-accent/10"
+                  >
+                    편집
+                  </button>
+                ))}
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded px-2 py-1.5 text-xs text-muted hover:bg-accent/10"
+              >
+                닫기
+              </button>
+            </div>
           </div>
 
           {project.sources.length > 0 && (
@@ -423,46 +466,6 @@ export function ProjectPage({
             </div>
           )}
         </div>
-
-        {editable && (
-          <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-rule px-5 py-3.5 @lg:px-8 @lg:py-4">
-            <button
-              type="button"
-              onClick={remove}
-              disabled={busy}
-              className="shrink-0 rounded px-2 py-1 text-xs text-muted hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
-            >
-              카드 지우기
-            </button>
-            {editing ? (
-              <div className="flex shrink-0 gap-2">
-                <button
-                  type="button"
-                  onClick={cancel}
-                  className="rounded px-3 py-1.5 text-xs text-muted hover:bg-accent/10"
-                >
-                  취소
-                </button>
-                <button
-                  type="button"
-                  onClick={save}
-                  disabled={busy}
-                  className="rounded bg-ink px-3 py-1.5 text-xs text-white disabled:opacity-40"
-                >
-                  {busy ? '저장 중' : '저장'}
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setEditing(true)}
-                className="shrink-0 rounded border border-rule px-3 py-1.5 text-xs text-ink hover:bg-accent/10"
-              >
-                편집
-              </button>
-            )}
-          </footer>
-        )}
       </div>
     </div>
   )
