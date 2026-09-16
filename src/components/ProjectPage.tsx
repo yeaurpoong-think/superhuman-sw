@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import type { CardChanges } from '../admin/useBoard'
 import type { ProjectRecord } from '../content'
 import { fromDateInput, toDateInput } from '../lib/dates'
+import { resizeFrom, type Box, type ResizeEdge } from '../lib/windows'
 import {
   CATEGORIES,
   CATEGORY_LABELS,
@@ -30,8 +31,10 @@ type Props = {
   y: number
   z: number
   isFront: boolean
-  width: number
+  w: number
+  h: number
   onMove: (x: number, y: number) => void
+  onResize: (box: Box) => void
   onFocus: () => void
 }
 
@@ -56,8 +59,10 @@ export function ProjectPage({
   y,
   z,
   isFront,
-  width,
+  w,
+  h,
   onMove,
+  onResize,
   onFocus,
 }: Props) {
   const [editing, setEditing] = useState(false)
@@ -106,6 +111,33 @@ export function ProjectPage({
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [isFront, editing, onClose])
+
+  /** 가장자리를 잡아 크기를 바꾼다. 왼쪽·위쪽을 끌면 자리도 같이 따라간다. */
+  const startResize = (edge: ResizeEdge) => (e: React.PointerEvent) => {
+    if (!floating || e.button !== 0) return
+    e.preventDefault()
+    e.stopPropagation()
+    onFocus()
+
+    const start = { x, y, w, h }
+    const sx = e.clientX
+    const sy = e.clientY
+    const move = (ev: PointerEvent) =>
+      onResize(
+        resizeFrom(start, edge, ev.clientX - sx, ev.clientY - sy, {
+          width: window.innerWidth,
+          height: window.innerHeight,
+        }),
+      )
+    const stop = () => {
+      document.removeEventListener('pointermove', move)
+      document.removeEventListener('pointerup', stop)
+      document.removeEventListener('pointercancel', stop)
+    }
+    document.addEventListener('pointermove', move)
+    document.addEventListener('pointerup', stop)
+    document.addEventListener('pointercancel', stop)
+  }
 
   /** 제목줄을 잡아 끈다. 줄 안의 버튼·링크를 눌렀을 때는 끌지 않는다. */
   const startDrag = (e: React.PointerEvent<HTMLElement>) => {
@@ -182,19 +214,53 @@ export function ProjectPage({
       aria-labelledby={titleId}
       tabIndex={-1}
       onPointerDown={onFocus}
-      style={
-        floating
-          ? { left: x, top: y, zIndex: z, width, maxHeight: `calc(100dvh - ${y + 24}px)` }
-          : { zIndex: z }
-      }
-      className={`sheet fixed flex flex-col focus:outline-none ${
+      style={floating ? { left: x, top: y, zIndex: z, width: w, height: h } : { zIndex: z }}
+      className={`sheet @container fixed flex flex-col focus:outline-none ${
         floating ? 'shadow-[0_24px_60px_-20px_rgba(0,0,0,0.6)]' : 'inset-x-2 top-3 bottom-3'
       }`}
     >
+      {floating && (
+        <>
+          <span
+            onPointerDown={startResize({ top: true })}
+            className="absolute inset-x-4 top-0 z-10 h-1.5 cursor-ns-resize"
+          />
+          <span
+            onPointerDown={startResize({ bottom: true })}
+            className="absolute inset-x-4 bottom-0 z-10 h-1.5 cursor-ns-resize"
+          />
+          <span
+            onPointerDown={startResize({ left: true })}
+            className="absolute inset-y-4 left-0 z-10 w-1.5 cursor-ew-resize"
+          />
+          <span
+            onPointerDown={startResize({ right: true })}
+            className="absolute inset-y-4 right-0 z-10 w-1.5 cursor-ew-resize"
+          />
+          <span
+            onPointerDown={startResize({ top: true, left: true })}
+            className="absolute top-0 left-0 z-10 size-4 cursor-nwse-resize"
+          />
+          <span
+            onPointerDown={startResize({ top: true, right: true })}
+            className="absolute top-0 right-0 z-10 size-4 cursor-nesw-resize"
+          />
+          <span
+            onPointerDown={startResize({ bottom: true, left: true })}
+            className="absolute bottom-0 left-0 z-10 size-4 cursor-nesw-resize"
+          />
+          {/* 오른쪽 아래만 눈에 보이게 표시한다. 크기를 바꿀 수 있다는 걸 알려면 보여야 한다. */}
+          <span
+            onPointerDown={startResize({ bottom: true, right: true })}
+            className="absolute right-0 bottom-0 z-10 size-5 cursor-nwse-resize after:absolute after:right-1.5 after:bottom-1.5 after:size-2 after:border-r-2 after:border-b-2 after:border-rule after:content-['']"
+          />
+        </>
+      )}
+
       <div className="flex min-h-0 flex-1 flex-col">
         <header
           onPointerDown={startDrag}
-          className={`shrink-0 border-b border-rule px-6 py-6 md:px-9 ${
+          className={`shrink-0 border-b border-rule px-5 py-5 @lg:px-8 @lg:py-6 ${
             floating ? 'cursor-grab active:cursor-grabbing' : ''
           }`}
         >
@@ -220,7 +286,7 @@ export function ProjectPage({
                   className="mt-3 w-full border border-rule bg-leaf px-2 py-1.5 font-display text-xl focus:border-accent"
                 />
               ) : (
-                <h2 id={titleId} className="mt-3 font-display text-2xl leading-snug tracking-tight text-ink">
+                <h2 id={titleId} className="mt-3 font-display text-xl leading-snug tracking-tight text-ink @lg:text-2xl">
                   {project.title}
                 </h2>
               )}
@@ -253,7 +319,7 @@ export function ProjectPage({
           )}
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-7 md:px-9">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 @lg:px-8 @lg:py-7">
           {editing ? (
             <>
               <Suspense
@@ -270,7 +336,7 @@ export function ProjectPage({
                 />
               </Suspense>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div className="mt-5 grid gap-3 @xl:grid-cols-2">
                 <label className="block text-xs text-muted">
                   종류
                   <select
@@ -359,7 +425,7 @@ export function ProjectPage({
         </div>
 
         {editable && (
-          <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-rule px-6 py-4 md:px-9">
+          <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-rule px-5 py-3.5 @lg:px-8 @lg:py-4">
             <button
               type="button"
               onClick={remove}

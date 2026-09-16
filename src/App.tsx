@@ -11,12 +11,13 @@ import { SchemaErrors } from './components/SchemaErrors'
 import { REPO } from './config'
 import { filterByCategory, partitionByKind } from './lib/schema'
 import {
-  WINDOW_WIDTH,
   bringToFront,
   closeWindow,
+  fitToViewport,
   frontWindow,
   moveWindow,
   openWindow,
+  resizeWindow,
   type WindowState,
 } from './lib/windows'
 
@@ -33,25 +34,15 @@ export default function App() {
   const visible = filterByCategory(board.projects, category)
   const { board: boardCards, references } = partitionByKind(visible)
 
-  const [vw, setVw] = useState(() => (typeof window === 'undefined' ? 1440 : window.innerWidth))
-  /** 창은 화면보다 넓을 수 없다. 좁은 모니터에서는 같이 줄어든다. */
-  const windowWidth = Math.min(WINDOW_WIDTH, Math.max(320, vw - 48))
-
   const viewport = () => ({ width: window.innerWidth, height: window.innerHeight })
 
   const openCard = useCallback((id: string) => {
-    setWindows((list) => openWindow(list, id, viewport(), windowWidth))
+    setWindows((list) => openWindow(list, id, viewport()))
   }, [])
 
   /** 화면을 줄였을 때 창이 바깥에 갇히지 않도록 다시 안으로 끌어당긴다. */
   useEffect(() => {
-    const onResize = () => {
-      setVw(window.innerWidth)
-      const width = Math.min(WINDOW_WIDTH, Math.max(320, window.innerWidth - 48))
-      setWindows((list) =>
-        list.reduce((acc, w) => moveWindow(acc, w.id, w.x, w.y, viewport(), width), list),
-      )
-    }
+    const onResize = () => setWindows((list) => fitToViewport(list, viewport()))
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [])
@@ -149,11 +140,11 @@ export default function App() {
               y={w.y}
               z={w.z}
               isFront={front?.id === w.id}
-              width={windowWidth}
+              w={w.w}
+              h={w.h}
               onFocus={() => setWindows((list) => bringToFront(list, w.id))}
-              onMove={(x, y) =>
-                setWindows((list) => moveWindow(list, w.id, x, y, viewport(), windowWidth))
-              }
+              onMove={(x, y) => setWindows((list) => moveWindow(list, w.id, x, y, viewport()))}
+              onResize={(box) => setWindows((list) => resizeWindow(list, w.id, box, viewport()))}
             />
           )
         })}

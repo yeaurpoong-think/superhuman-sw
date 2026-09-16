@@ -24,6 +24,8 @@
 
 body {
   background-color: var(--color-shell);
+  /* 긴 주소 한 줄이 창을 옆으로 밀어내지 않게 한다. */
+  overflow-wrap: break-word;
   /* 위에서 내려오는 서가 조명 한 줄. */
 }
 
@@ -99,9 +101,14 @@ article h3 button:focus-visible {
   margin-inline: auto;
 }
 
-/* 표와 코드처럼 넓어야 하는 것만 폭 제한에서 뺀다. */
+/* 표와 코드는 읽기 폭을 넘어도 되지만 창 밖으로는 못 나간다. 각자 안에서 스크롤한다. */
 .md :where(table, pre) {
-  max-width: none;
+  max-width: 100%;
+}
+
+/* 주소와 코드 조각은 띄어쓰기가 없어 통째로 삐져나온다. 어디서든 끊는다. */
+.md :where(a, code) {
+  overflow-wrap: anywhere;
 }
 
 .md :where(h1, h2),
