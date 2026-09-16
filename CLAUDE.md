@@ -35,6 +35,13 @@ cat 리서치.md | npm run new -- --title "제목" --url "https://..."
 - frontmatter에 주석을 쓰지 마라. 사이트에서 편집·저장하면 사라진다
 - 토큰·쿠키·세션 값은 절대 커밋하지 않는다. 퍼블릭 레포다. 깃허브 토큰은 비밀번호로 잠근 `public/vault.json` 에만 둔다
 
+## 화면 구성
+
+페이지가 둘이다. `/` 는 홈(스크롤에 물린 히어로 영상), `/library` 는 서고(칸반 보드).
+라우팅은 `src/router.ts` 의 아주 작은 라우터가 맡고, 깃허브 페이지스에서는 404.html 되돌림으로 동작한다.
+
+히어로 영상은 `public/hero.mp4` 에 두면 붙는다. 조건은 [`docs/HERO-VIDEO.md`](docs/HERO-VIDEO.md).
+
 ## 사이트에서 직접 편집
 
 비밀번호로 금고를 열어 편집한다. 설정은 [`docs/EDITING.md`](docs/EDITING.md).
