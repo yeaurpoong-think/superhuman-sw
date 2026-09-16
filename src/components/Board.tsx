@@ -121,7 +121,7 @@ export function Board({ projects, editable, onMove, onOpen }: Props) {
               cards.map((p) => <Card key={p.id} project={p} onOpen={() => onOpen(p.id)} />)
             )}
             {cards.length === 0 && (
-              <p className="label py-8 text-center text-rule">빈 서가</p>
+              <p className="label py-8 text-center">빈 서가</p>
             )}
           </Shelf>
         </div>

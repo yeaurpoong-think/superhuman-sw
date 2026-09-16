@@ -24,7 +24,8 @@ export function CategoryFilter({ projects, value, onChange }: Props) {
   ]
 
   return (
-    <div className="-mx-1 flex flex-wrap items-center">
+    /* 좁은 화면에서는 줄바꿈 대신 옆으로 민다. 서랍을 당겨 보는 느낌이고 세로 공간도 아낀다. */
+    <div className="-mx-5 flex snap-x items-center gap-1 overflow-x-auto px-5 pb-1 md:mx-0 md:flex-wrap md:justify-center md:overflow-visible md:px-0 md:pb-0">
       {items.map(({ key, label }) => {
         const count = countOf(key)
         const selected = value === key
@@ -33,7 +34,7 @@ export function CategoryFilter({ projects, value, onChange }: Props) {
             key={key}
             type="button"
             onClick={() => onChange(key)}
-            className={`mx-1 border-b-2 px-1.5 py-2 whitespace-nowrap transition-colors ${
+            className={`flex min-h-11 shrink-0 snap-start items-center border-b-2 px-2 whitespace-nowrap transition-colors ${
               selected ? 'border-accent text-ink' : 'border-transparent text-muted hover:text-ink'
             } ${count === 0 && !selected ? 'opacity-40' : ''}`}
           >

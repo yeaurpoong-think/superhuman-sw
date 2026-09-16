@@ -19,7 +19,7 @@ export function LoginPanel({ admin, onSignIn, onSignOut }: Props) {
     return (
       <div className="flex items-center gap-3 whitespace-nowrap">
         <span className="label text-accent">사서 모드</span>
-        <button type="button" onClick={onSignOut} className="label underline underline-offset-4 hover:text-ink">
+        <button type="button" onClick={onSignOut} className="label -m-2 inline-flex min-h-11 items-center p-2 underline underline-offset-4 hover:text-ink">
           잠그기
         </button>
       </div>
@@ -31,7 +31,7 @@ export function LoginPanel({ admin, onSignIn, onSignOut }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="label whitespace-nowrap underline underline-offset-4 hover:text-ink"
+        className="label -m-2 inline-flex min-h-11 min-w-11 items-center justify-end p-2 whitespace-nowrap underline underline-offset-4 hover:text-ink"
       >
         사서 출입
       </button>
@@ -67,7 +67,7 @@ export function LoginPanel({ admin, onSignIn, onSignOut }: Props) {
         autoComplete="current-password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        className="mt-1.5 w-full rounded border border-rule px-2 py-1.5 text-xs outline-none focus:border-accent"
+        className="mt-1.5 w-full rounded border border-rule px-2 py-1.5 text-xs focus:border-accent"
       />
 
       <label className="mt-2.5 flex items-center gap-2 text-xs text-ink-soft">

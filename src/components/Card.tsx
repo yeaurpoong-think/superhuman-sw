@@ -26,9 +26,8 @@ export function Card({
 
   return (
     <article
-      onClick={onOpen}
-      className={`group relative border border-rule bg-leaf px-4 pt-3.5 pb-3 transition-shadow hover:shadow-[0_2px_10px_-4px_rgba(60,45,20,0.35)] ${
-        draggable ? 'cursor-grab active:cursor-grabbing' : onOpen ? 'cursor-pointer' : ''
+      className={`group relative border border-rule bg-leaf px-4 pt-3.5 pb-3 transition-shadow hover:shadow-[0_2px_10px_-4px_rgba(60,45,20,0.35)] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
+        draggable ? 'cursor-grab active:cursor-grabbing' : ''
       }`}
     >
       {/* 책등처럼 왼쪽에 서는 얇은 띠 */}
@@ -44,12 +43,23 @@ export function Card({
         )}
       </div>
 
-      <h3 className="mt-2 font-serif text-[16px] leading-snug text-ink">{project.title}</h3>
+      <h3 className="mt-2 font-serif text-[16px] leading-snug text-ink">
+        {onOpen ? (
+          /* 카드 전체가 눌리면서도 키보드로 닿는다. 넓힌 판이 카드를 덮는다. */
+          <button
+            type="button"
+            onClick={onOpen}
+            className="text-left after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
+          >
+            {project.title}
+          </button>
+        ) : (
+          project.title
+        )}
+      </h3>
 
       {project.tags.length > 0 && (
-        <p className="mt-2 text-[11px] text-muted">
-          {project.tags.map((t) => `#${t}`).join('  ')}
-        </p>
+        <p className="mt-2 text-[11px] text-muted">{project.tags.map((t) => `#${t}`).join('  ')}</p>
       )}
 
       <div className="mt-3 flex items-center gap-3 border-t border-rule-soft pt-2">
@@ -63,7 +73,7 @@ export function Card({
             target="_blank"
             rel="noreferrer noopener"
             onClick={(e) => e.stopPropagation()}
-            className="label text-accent underline underline-offset-2"
+            className="label relative z-10 text-accent underline underline-offset-2"
           >
             발행본
           </a>

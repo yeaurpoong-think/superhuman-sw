@@ -24,13 +24,13 @@ export function NewProject({ onCreate }: { onCreate: (v: { title: string; url?: 
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="새 프로젝트 제목"
-        className="min-w-52 flex-1 rounded-lg border border-rule bg-leaf px-3 py-2 text-sm outline-none focus:border-accent"
+        className="min-w-52 flex-1 rounded-lg border border-rule bg-leaf px-3 py-2 text-sm focus:border-accent"
       />
       <input
         value={url}
         onChange={(e) => setUrl(e.target.value)}
         placeholder="영감을 받은 링크 (선택)"
-        className="min-w-52 flex-1 rounded-lg border border-rule bg-leaf px-3 py-2 text-sm outline-none focus:border-accent"
+        className="min-w-52 flex-1 rounded-lg border border-rule bg-leaf px-3 py-2 text-sm focus:border-accent"
       />
       <button
         type="submit"

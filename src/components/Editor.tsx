@@ -165,7 +165,7 @@ function RawEditor({ value, onChange, onUploadImage, onUploadError, onUploadingC
       onChange={(e) => onChange(e.target.value)}
       onPaste={handlePaste}
       spellCheck={false}
-      className="min-h-72 w-full rounded-lg border border-rule bg-leaf px-4 py-3 font-mono text-xs leading-relaxed outline-none focus:border-accent"
+      className="min-h-72 w-full rounded-lg border border-rule bg-leaf px-4 py-3 font-mono text-xs leading-relaxed focus:border-accent"
     />
   )
 }

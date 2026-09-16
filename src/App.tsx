@@ -24,6 +24,12 @@ export default function App() {
 
   return (
     <div className="min-h-dvh px-3 py-4 md:px-6 md:py-10">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:border focus:border-rule focus:bg-leaf focus:px-3 focus:py-2 focus:text-sm focus:text-ink"
+      >
+        본문으로 건너뛰기
+      </a>
       <div className="sheet relative mx-auto max-w-6xl px-5 py-10 md:px-14 md:py-14">
         <div className="absolute top-5 right-5 z-20 md:top-7 md:right-7">
           <LoginPanel admin={board.admin} onSignIn={board.signIn} onSignOut={board.signOut} />
@@ -47,7 +53,7 @@ export default function App() {
 
         <div className="rule-double mt-10" />
 
-        <div className="mt-5 flex justify-center">
+        <div className="mt-5">
           <CategoryFilter projects={board.projects} value={category} onChange={setCategory} />
         </div>
 
@@ -57,15 +63,28 @@ export default function App() {
           </div>
         )}
 
-        <div className="mt-8">
+        <main id="main" className="mt-8">
           <SchemaErrors errors={board.contentErrors} />
-          <Board
-            projects={visible}
-            editable={board.admin !== null}
-            onMove={board.moveCard}
-            onOpen={setOpenId}
-          />
-        </div>
+          {visible.length === 0 && board.projects.length > 0 ? (
+            <div className="border border-rule border-dashed py-16 text-center">
+              <p className="font-serif text-ink-soft">이 분류에는 아직 꽂힌 것이 없다.</p>
+              <button
+                type="button"
+                onClick={() => setCategory('all')}
+                className="label mt-3 inline-flex min-h-11 items-center underline underline-offset-4 hover:text-ink"
+              >
+                전체 서가 보기
+              </button>
+            </div>
+          ) : (
+            <Board
+              projects={visible}
+              editable={board.admin !== null}
+              onMove={board.moveCard}
+              onOpen={setOpenId}
+            />
+          )}
+        </main>
 
         <footer className="mt-14 flex flex-wrap items-center justify-between gap-2 border-t border-rule-soft pt-5">
           <span className="label">

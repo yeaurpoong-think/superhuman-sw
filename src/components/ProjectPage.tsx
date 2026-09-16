@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import rehypeSanitize from 'rehype-sanitize'
 import remarkGfm from 'remark-gfm'
@@ -28,7 +28,7 @@ type Props = {
 const fmt = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' })
 
 const FIELD =
-  'mt-1 w-full rounded border border-rule px-2 py-1.5 text-xs outline-none focus:border-accent'
+  'mt-1 w-full rounded border border-rule px-2 py-1.5 text-xs focus:border-accent'
 
 export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage, onClose }: Props) {
   const [editing, setEditing] = useState(false)
@@ -43,6 +43,50 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
   const [busy, setBusy] = useState(false)
 
   const stage = stageOf(project)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  /** 열릴 때 포커스를 판 안으로 넣고, 닫히면 원래 있던 자리로 돌려놓는다. */
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null
+    panelRef.current?.focus()
+    const bodyOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = bodyOverflow
+      opener?.focus?.()
+    }
+  }, [])
+
+  /** 열린 동안 Tab은 판 안에서만 돌고, Esc로 물러난다. */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        // 편집 중이라면 편집만 물린다. 쓰던 글을 한 번에 날리지 않는다.
+        if (editing) cancelRef.current()
+        else onClose()
+        return
+      }
+      if (e.key !== 'Tab') return
+      const items = panelRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])',
+      )
+      if (!items || items.length === 0) return
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [editing, onClose])
+
+  const cancelRef = useRef<() => void>(() => {})
 
   const cancel = () => {
     setTitle(project.title)
@@ -93,7 +137,12 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
       onClick={onClose}
     >
       <div
-        className="sheet mx-auto max-w-3xl"
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="project-title"
+        tabIndex={-1}
+        className="sheet mx-auto max-w-3xl focus:outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="border-b border-rule px-6 py-6 md:px-9">
@@ -114,10 +163,10 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="mt-3 w-full border border-rule bg-leaf px-2 py-1.5 font-display text-xl outline-none focus:border-accent"
+                  className="mt-3 w-full border border-rule bg-leaf px-2 py-1.5 font-display text-xl focus:border-accent"
                 />
               ) : (
-                <h2 className="mt-3 font-display text-2xl leading-snug tracking-tight text-ink">
+                <h2 id="project-title" className="mt-3 font-display text-2xl leading-snug tracking-tight text-ink">
                   {project.title}
                 </h2>
               )}
