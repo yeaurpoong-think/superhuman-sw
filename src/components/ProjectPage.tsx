@@ -8,8 +8,10 @@ import { fromDateInput, toDateInput } from '../lib/dates'
 import {
   CATEGORIES,
   CATEGORY_LABELS,
+  KINDS,
   STAGE_LABELS,
   type Category,
+  type Kind,
   stageOf,
 } from '../lib/schema'
 
@@ -27,6 +29,11 @@ type Props = {
 
 const fmt = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' })
 
+const KIND_LABELS: Record<Kind, string> = {
+  project: '프로젝트 (칸반 보드)',
+  reference: '레퍼런스 (참고 자료 서가)',
+}
+
 const FIELD =
   'mt-1 w-full rounded border border-rule px-2 py-1.5 text-xs outline-none focus:border-accent'
 
@@ -35,6 +42,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
   const [title, setTitle] = useState(project.title)
   const [body, setBody] = useState(project.body)
   const [postUrl, setPostUrl] = useState(project.post_url ?? '')
+  const [kind, setKind] = useState<Kind>(project.kind ?? 'project')
   const [category, setCategory] = useState<Category | ''>(project.category ?? '')
   const [researched, setResearched] = useState(toDateInput(project.researched_at))
   const [executed, setExecuted] = useState(toDateInput(project.executed_at))
@@ -48,6 +56,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
     setTitle(project.title)
     setBody(project.body)
     setPostUrl(project.post_url ?? '')
+    setKind(project.kind ?? 'project')
     setCategory(project.category ?? '')
     setResearched(toDateInput(project.researched_at))
     setExecuted(toDateInput(project.executed_at))
@@ -76,6 +85,7 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
         title,
         body,
         post_url: postUrl.trim() || null,
+        kind,
         category: category || null,
         researched_at: fromDateInput(researched) ?? project.researched_at,
         executed_at: fromDateInput(executed),
@@ -171,6 +181,21 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <label className="block text-xs text-muted">
+                  종류
+                  <select
+                    value={kind}
+                    onChange={(e) => setKind(e.target.value as Kind)}
+                    className={FIELD}
+                  >
+                    {KINDS.map((k) => (
+                      <option key={k} value={k}>
+                        {KIND_LABELS[k]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block text-xs text-muted">
                   분류
                   <select
                     value={category}
@@ -228,8 +253,9 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
               </div>
 
               <p className="mt-3 text-[11px] leading-relaxed text-muted">
-                칸반 위치는 이 날짜들에서 정해진다. 발행 날짜를 넣으면 콘텐츠 완료로, 비우면 실행
-                완료로 돌아간다. 칸을 끌어 옮기면 그날 날짜가 자동으로 들어간다.
+                종류를 "레퍼런스"로 바꾸면 칸반 보드가 아니라 그 아래 레퍼런스 서가에 쌓인다.
+                "프로젝트"인 카드는 칸반 위치가 아래 날짜들에서 정해진다. 발행 날짜를 넣으면 콘텐츠
+                완료로, 비우면 실행 완료로 돌아간다. 칸을 끌어 옮기면 그날 날짜가 자동으로 들어간다.
               </p>
             </>
           ) : (

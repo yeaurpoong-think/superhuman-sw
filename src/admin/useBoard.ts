@@ -6,7 +6,7 @@ import { encodeBytesBase64 } from '../lib/base64'
 import { MAX_IMAGE_BYTES, extensionFor, imagePath, rawUrl } from '../lib/images'
 import { buildFile, patchFrontmatter, splitFile } from '../lib/markdown'
 import { clearedByMove, patchForMove, rankBetween } from '../lib/move'
-import { sortByRank, stageOf, type Category, type Stage } from '../lib/schema'
+import { sortByRank, stageOf, type Category, type Kind, type Stage } from '../lib/schema'
 import { applyOverlay, pruneOverlay, readOverlay, writeOverlay, type Overlay } from './overlay'
 import { fetchVault, openVault } from '../lib/vault'
 import { clearToken, readToken, writeToken } from './session'
@@ -24,6 +24,7 @@ export type CardChanges = {
   body?: string
   post_url?: string | null
   tags?: string[]
+  kind?: Kind
   category?: Category | null
   researched_at?: string
   executed_at?: string | null
@@ -145,6 +146,7 @@ export function useBoard() {
       if (changes.title !== undefined) meta.title = changes.title.trim()
       if (changes.post_url !== undefined) meta.post_url = changes.post_url || null
       if (changes.tags !== undefined) meta.tags = changes.tags
+      if (changes.kind !== undefined) meta.kind = changes.kind
       if (changes.category !== undefined) meta.category = changes.category
       // 리서치 날짜는 비울 수 없다. 카드가 존재한다는 건 리서치가 끝났다는 뜻이다.
       if (changes.researched_at) meta.researched_at = changes.researched_at
