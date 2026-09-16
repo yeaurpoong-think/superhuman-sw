@@ -14,6 +14,7 @@ post_url: null
 researched_at: '2026-09-14T15:00:00.000Z'
 executed_at: null
 published_at: null
+kind: reference
 ---
 
 ## 🎯 핵심 요약
