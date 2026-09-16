@@ -3,6 +3,7 @@ import { HERO_PAGE, HERO_POSTER, HERO_VIDEO, HERO_VIDEO_SMALL } from '../config'
 import { projects } from '../content'
 import { heroCues } from '../lib/hero'
 import {
+  CATEGORIES,
   CATEGORY_LABELS,
   STAGE_LABELS,
   averageLeadTimeDays,
@@ -124,6 +125,9 @@ export function Home({ onNavigate }: Props) {
                     <br />
                     아직 내 것이 아니다
                   </p>
+                  <p className="mt-6 max-w-sm font-serif text-sm leading-relaxed text-white/75 md:text-base">
+                    읽고 지나간 것은 사흘이면 남지 않는다. 해보고 적어 둔 것만 남는다.
+                  </p>
                 </div>
               </div>
             </div>
@@ -131,10 +135,13 @@ export function Home({ onNavigate }: Props) {
         }}
       </ScrollVideo>
 
-      {/* 위 문장에서 이어지는 지면. 같은 종이 위에 계속 쓰인다. */}
+      {/*
+        위 문장에서 이어지는 지면. 펼친 책처럼 두 면으로 나눈다.
+        가운데 빈 줄이 책등 주름 위에 놓여서 글이 주름에 걸리지 않는다.
+      */}
       <section className="px-5 pt-24 pb-28 md:px-10">
-        <div className="mx-auto max-w-5xl">
-          <div className="max-w-xl">
+        <div className="mx-auto grid max-w-5xl gap-y-16 md:grid-cols-2 md:gap-x-20">
+          <div>
             <h2 className="font-display text-4xl leading-snug text-white md:text-5xl">
               해보고, 남겨야 내 것이 된다
             </h2>
@@ -159,7 +166,7 @@ export function Home({ onNavigate }: Props) {
               <p className="label text-paper">기록하는 방식</p>
               {RULES.map((rule, i) => (
                 <div key={rule.head} className="flex gap-4">
-                  <span className="label mt-1 shrink-0 text-white/50">{`0${i + 1}`}</span>
+                  <span className="label mt-1 shrink-0 text-white/70">{`0${i + 1}`}</span>
                   <div>
                     <h3 className="font-serif text-lg text-white">{rule.head}</h3>
                     <p className="mt-2 font-serif text-[15px] leading-relaxed text-paper">
@@ -170,7 +177,27 @@ export function Home({ onNavigate }: Props) {
               ))}
             </div>
 
-            <dl className="mt-16 grid gap-8 border-t border-white/25 pt-10 sm:grid-cols-3">
+            <div className="mt-16 border-t border-white/25 pt-10">
+              <h3 className="font-display text-3xl leading-snug text-white md:text-4xl">
+                같은 길을 가려는 사람에게
+              </h3>
+              <p className="mt-6 font-serif text-base leading-relaxed text-paper md:text-lg">
+                앞서간 사람의 정리된 결론만 보고 싶다면 이 서고는 맞지 않는다. 여기 남는 것은
+                과정이다. 무엇을 읽었고, 무엇을 해봤고, 어디서 막혔는지.
+              </p>
+              <p className="mt-4 font-serif text-base leading-relaxed text-paper md:text-lg">
+                같은 걸 해보려다 같은 데서 막혔던 사람이라면, 이 기록이 쓸모가 있을 것이다.
+              </p>
+              <p className="mt-6 font-serif text-[15px] leading-relaxed text-paper">
+                새 글은 조용히 쌓인다. 알림도 구독도 없다. 생각날 때 들러서 그동안 늘어난 것을
+                보면 된다.
+              </p>
+            </div>
+          </div>
+
+          {/* 오른쪽 면 */}
+          <div>
+            <dl className="grid gap-8 border-t border-white/25 pt-10">
               {figures.map((f) => (
                 <div key={f.label}>
                   <dt className="label text-paper">{f.label}</dt>
@@ -204,22 +231,6 @@ export function Home({ onNavigate }: Props) {
               </div>
             )}
 
-            <div className="mt-16 border-t border-white/25 pt-10">
-              <h3 className="font-display text-3xl leading-snug text-white md:text-4xl">
-                같은 길을 가려는 사람에게
-              </h3>
-              <p className="mt-6 font-serif text-base leading-relaxed text-paper md:text-lg">
-                앞서간 사람의 정리된 결론만 보고 싶다면 이 서고는 맞지 않는다. 여기 남는 것은
-                과정이다. 무엇을 읽었고, 무엇을 해봤고, 어디서 막혔는지.
-              </p>
-              <p className="mt-4 font-serif text-base leading-relaxed text-paper md:text-lg">
-                같은 걸 해보려다 같은 데서 막혔던 사람이라면, 이 기록이 쓸모가 있을 것이다.
-              </p>
-              <p className="mt-6 font-serif text-[15px] leading-relaxed text-paper">
-                새 글은 조용히 쌓인다. 알림도 구독도 없다. 생각날 때 들러서 그동안 늘어난 것을
-                보면 된다.
-              </p>
-            </div>
 
             <div className="mt-16 border-t border-white/25 pt-10">
               <button
@@ -238,6 +249,22 @@ export function Home({ onNavigate }: Props) {
               <p className="mt-5 font-serif text-[15px] text-paper">
                 리서치 완료 · 실행 완료 · 콘텐츠 완료 세 칸으로 나뉘어 있다.
               </p>
+            </div>
+
+            {/* 책 뒤쪽 판권지처럼, 굳이 크게 말할 것 없는 것들을 잔글로 적어 둔다. */}
+            <div className="mt-16 space-y-4 border-t border-white/25 pt-10 font-serif text-[15px] leading-relaxed text-paper">
+              <p className="label text-paper">여기 적어 두는 것</p>
+              <p>
+                새 글은 링크 하나에서 시작한다. 릴스나 글 주소를 던지면 에이전트가 원문을 받아
+                정리해 서가에 꽂는다.
+              </p>
+              <p>
+                분류는 {CATEGORIES.length}개다 —{' '}
+                {CATEGORIES.map((c) => CATEGORY_LABELS[c]).join(' · ')}. 애매하면 비워 둔다.
+              </p>
+              <p>숫자는 이 페이지를 열 때마다 다시 센다. 손으로 적어 둔 값이 아니다.</p>
+              <p>참고 자료는 칸반을 타지 않는다. 언젠가 쓸 것 같아 꽂아 둔 것들이다.</p>
+              <p>완성된 것만 모이지는 않는다. 하다가 멈춘 것도 멈춘 자리에 그대로 둔다.</p>
             </div>
           </div>
         </div>

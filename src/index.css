@@ -26,6 +26,8 @@ body {
   background-color: var(--color-shell);
   /* 긴 주소 한 줄이 창을 옆으로 밀어내지 않게 한다. */
   overflow-wrap: break-word;
+  /* 한글은 기본값이면 단어 한가운데서 잘린다. 띄어쓰기에서만 넘기게 한다. */
+  word-break: keep-all;
   /* 위에서 내려오는 서가 조명 한 줄. */
 }
 
@@ -57,7 +59,18 @@ body::before {
   font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-muted);
+}
+
+/*
+ * 기본 색만 components 레이어에 둔다.
+ * Tailwind v4 는 유틸리티를 레이어에 넣는데, 레이어 밖 규칙이 항상 이긴다.
+ * 여기 두어야 text-paper 같은 유틸리티로 덮을 수 있다 —
+ * 종이처럼 어두운 바탕 위에서 색을 못 바꾸면 글자가 안 보인다.
+ */
+@layer components {
+  .label {
+    color: var(--color-muted);
+  }
 }
 
 /* 키보드로 다니는 사람에게도 지금 어디에 있는지 보여준다. */
