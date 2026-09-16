@@ -27,7 +27,7 @@ describe('routeFromPath', () => {
 describe('pathForRoute', () => {
   it('주소를 되돌려 만든다', () => {
     expect(pathForRoute('home')).toBe(BASE)
-    expect(pathForRoute('library')).toBe(`${BASE}library`)
+    expect(pathForRoute('library')).toBe(`${BASE}library/`)
   })
 
   it('만든 주소를 다시 읽으면 같은 화면이 나온다', () => {

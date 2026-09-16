@@ -20,7 +20,8 @@ export function routeFromPath(pathname: string): Route {
 }
 
 export function pathForRoute(route: Route): string {
-  return route === 'library' ? `${BASE}library` : BASE
+  // 끝 슬래시를 붙여야 빌드가 뽑아 둔 library/index.html 과 주소가 맞는다.
+  return route === 'library' ? `${BASE}library/` : BASE
 }
 
 export const ROUTE_TITLES: Record<Route, string> = {

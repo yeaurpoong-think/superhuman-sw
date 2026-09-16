@@ -38,6 +38,10 @@ const spaFallback = (): Plugin => ({
 
 export default defineConfig({
   base: '/superhuman-sw/',
+  build: {
+    // 서고를 진짜 페이지로 뽑는다. 404 되돌림에 기대면 주소를 공유했을 때 404로 응답한다.
+    rollupOptions: { input: { main: 'index.html', library: 'library/index.html' } },
+  },
   plugins: [react(), tailwindcss(), csp(), spaFallback()],
   define: {
     __BUILD_SHA__: JSON.stringify(process.env.GITHUB_SHA ?? 'dev'),
