@@ -12,6 +12,7 @@
 id: instagram-hook-teardown
 title: 인스타 훅 구조 분해
 rank: a0
+kind: project
 category: content
 tags: [instagram, copywriting]
 sources:
@@ -35,6 +36,7 @@ published_at: null
 | `title` | ✅ | 사람이 읽는 제목. 한글 자유롭게 |
 | `rank` | ✅ | 컬럼 안에서의 정렬 키. 새로 만들 때는 `a0`으로 두면 된다. 사이트에서 드래그하면 알아서 다시 매겨진다 |
 | `researched_at` | ✅ | 리서치를 끝낸 시각. ISO 8601 UTC (`2026-09-01T01:00:00Z`). 날짜만(`2026-09-01`) 써도 그날 자정으로 읽는다 |
+| `kind` | | `project`(기본값, 칸반 보드에 올라간다) 또는 `reference`(칸반을 타지 않고 "레퍼런스" 서가에 그냥 쌓인다). 생략하면 `project` |
 | `category` | | 분류 하나. `agent`(에이전트) · `automation`(자동화) · `content`(콘텐츠) · `business`(사업 아이디어) · `market`(시장 인사이트) 중 하나. 애매하면 비워 두면 '미분류'로 들어간다. **목록에 없는 값을 쓰면 CI가 실패한다** |
 | `tags` | | 자유로운 문자열 배열. 분류와 달리 아무 말이나 써도 된다. 없으면 생략하거나 `[]` |
 | `sources` | | 리서치를 촉발한 원본 목록. `url` 필수, `type`은 `reel`·`carousel`·`article`·`video`·`link` 중 하나(기본 `link`), `title`은 선택 |
@@ -44,7 +46,7 @@ published_at: null
 
 계약에 없는 키를 추가로 넣어도 지워지지 않는다. 다만 화면에는 나오지 않는다.
 
-## 칸반 컬럼은 저장하지 않는다
+## 칸반 컬럼은 저장하지 않는다 (`kind: project`에만 해당)
 
 컬럼은 **타임스탬프에서 유도**한다. `status` 같은 필드를 만들지 마라. 무시된다.
 
@@ -55,6 +57,16 @@ published_at: null
 | 콘텐츠 완료 | `published_at`이 있다 |
 
 그래서 **새 리서치를 올릴 때는 `researched_at`만 채우고 나머지 둘은 `null`로 둔다.** 그러면 '리서치 완료' 칸에 카드가 생긴다.
+
+## 레퍼런스 카드 (`kind: reference`)
+
+리서치→실행→콘텐츠 흐름을 타지 않고 그냥 참고 자료로 보관만 하고 싶은 카드는 `kind: reference`로 만든다.
+칸반 보드 대신 그 아래 "레퍼런스" 섹션에 쌓인다. `executed_at`/`published_at`은 의미가 없으니
+`null`로 둔 채 신경 쓰지 않아도 된다.
+
+```bash
+npm run new -- --title "참고 링크 제목" --url "https://..." --kind reference --category market
+```
 
 ## 새 프로젝트를 올리는 절차
 

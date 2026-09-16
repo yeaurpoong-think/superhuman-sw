@@ -100,7 +100,9 @@ export function ProjectPage({ project, editable, onSave, onDelete, onUploadImage
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
-                <span className="label border border-rule px-1.5 py-0.5">{STAGE_LABELS[stage]}</span>
+                <span className="label border border-rule px-1.5 py-0.5">
+                  {project.kind === 'reference' ? '레퍼런스' : STAGE_LABELS[stage]}
+                </span>
                 {project.category && (
                   <span className="label text-accent">{CATEGORY_LABELS[project.category]}</span>
                 )}

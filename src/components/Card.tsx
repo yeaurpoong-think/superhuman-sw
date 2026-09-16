@@ -4,6 +4,7 @@ import { CATEGORY_LABELS, stageOf } from '../lib/schema'
 const fmt = new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' })
 
 const dateOf = (p: ProjectRecord) => {
+  if (p.kind === 'reference') return { label: '등록', at: p.researched_at }
   const stage = stageOf(p)
   if (stage === 'content') return { label: '발행', at: p.published_at! }
   if (stage === 'execution') return { label: '실행', at: p.executed_at! }

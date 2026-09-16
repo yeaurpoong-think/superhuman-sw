@@ -7,6 +7,7 @@ import {
   countsByStage,
   inFlightCount,
   parseProject,
+  partitionByKind,
   sortByRank,
   stageOf,
 } from './schema'
@@ -171,5 +172,30 @@ describe('filterByCategory', () => {
 
   it('미분류만 따로 볼 수 있다', () => {
     expect(filterByCategory(list, 'none').map((x) => x.id)).toEqual(['c'])
+  })
+})
+
+describe('kind / partitionByKind', () => {
+  const p = (over: Record<string, unknown>) => {
+    const r = ok(over)
+    if (!r.ok) throw new Error('fixture invalid')
+    return r.value
+  }
+
+  it('kind를 생략하면 project로 취급한다', () => {
+    const r = ok()
+    expect(r.ok).toBe(true)
+    if (r.ok) expect(r.value.kind).toBe('project')
+  })
+
+  it('reference가 아닌 값을 주면 project 외 다른 값은 거부한다', () => {
+    expect(ok({ kind: 'archive' }).ok).toBe(false)
+  })
+
+  it('project와 reference를 갈라낸다', () => {
+    const list = [p({ id: 'a' }), p({ id: 'b', kind: 'reference' }), p({ id: 'c' })]
+    const { board, references } = partitionByKind(list)
+    expect(board.map((x) => x.id)).toEqual(['a', 'c'])
+    expect(references.map((x) => x.id)).toEqual(['b'])
   })
 })
