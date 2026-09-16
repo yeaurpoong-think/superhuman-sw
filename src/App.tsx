@@ -5,10 +5,11 @@ import { CategoryFilter, type CategoryFilterValue } from './components/CategoryF
 import { LoginPanel } from './components/LoginPanel'
 import { Metrics } from './components/Metrics'
 import { NewProject } from './components/NewProject'
+import { ReferenceShelf } from './components/ReferenceShelf'
 import { SaveStatus } from './components/SaveStatus'
 import { SchemaErrors } from './components/SchemaErrors'
 import { REPO } from './config'
-import { filterByCategory } from './lib/schema'
+import { filterByCategory, partitionByKind } from './lib/schema'
 
 const ProjectPage = lazy(() =>
   import('./components/ProjectPage').then((m) => ({ default: m.ProjectPage })),
@@ -21,6 +22,7 @@ export default function App() {
 
   const open = board.projects.find((p) => p.id === openId) ?? null
   const visible = filterByCategory(board.projects, category)
+  const { board: boardCards, references } = partitionByKind(visible)
 
   return (
     <div className="min-h-dvh px-3 py-4 md:px-6 md:py-10">
@@ -47,7 +49,7 @@ export default function App() {
           <div aria-hidden className="mx-auto mt-7 h-px w-16 bg-accent/50" />
 
           <div className="mt-9 flex justify-center">
-            <Metrics projects={visible} />
+            <Metrics projects={boardCards} />
           </div>
         </header>
 
@@ -65,8 +67,8 @@ export default function App() {
 
         <main id="main" className="mt-8">
           <SchemaErrors errors={board.contentErrors} />
-          {visible.length === 0 && board.projects.length > 0 ? (
-            <div className="border border-rule border-dashed py-16 text-center">
+          {boardCards.length === 0 && references.length === 0 && board.projects.length > 0 ? (
+            <div className="border border-dashed border-rule py-16 text-center">
               <p className="font-serif text-ink-soft">이 분류에는 아직 꽂힌 것이 없다.</p>
               <button
                 type="button"
@@ -78,12 +80,14 @@ export default function App() {
             </div>
           ) : (
             <Board
-              projects={visible}
+              projects={boardCards}
               editable={board.admin !== null}
               onMove={board.moveCard}
               onOpen={setOpenId}
             />
           )}
+
+          <ReferenceShelf projects={references} onOpen={setOpenId} />
         </main>
 
         <footer className="mt-14 flex flex-wrap items-center justify-between gap-2 border-t border-rule-soft pt-5">

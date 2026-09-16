@@ -30,11 +30,19 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   market: '시장 인사이트',
 }
 
+/**
+ * 카드 종류. `project`는 리서치→실행→콘텐츠 칸반을 따라가는 프로젝트 카드(기본값).
+ * `reference`는 칸반을 타지 않는 참고 자료 — 그냥 쌓아 두는 서가다.
+ */
+export const KINDS = ['project', 'reference'] as const
+export type Kind = (typeof KINDS)[number]
+
 /** 계약에 없는 키는 버리지 않고 그대로 보존한다. 에이전트가 남긴 메모를 앱이 삼키면 안 된다. */
 export const ProjectSchema = z.looseObject({
   id: z.string().regex(/^[a-z0-9][a-z0-9-]*$/, 'id는 소문자·숫자·하이픈만 쓴다'),
   title: z.string().min(1),
   rank: z.string().min(1),
+  kind: z.enum(KINDS).default('project'),
   tags: z.array(z.string()).default([]),
   sources: z.array(SourceSchema).default([]),
   category: z.enum(CATEGORIES).nullable().default(null),
@@ -125,4 +133,14 @@ export function sortByRank<T extends { rank?: string; id: string }>(list: T[]): 
     if (ra !== rb) return ra < rb ? -1 : 1
     return a.id < b.id ? -1 : a.id > b.id ? 1 : 0
   })
+}
+
+/** 칸반 보드에 올릴 것과 참고 자료 서가에 놓을 것을 가른다. */
+export function partitionByKind<T extends { kind?: Kind }>(list: T[]): {
+  board: T[]
+  references: T[]
+} {
+  const board = list.filter((p) => (p.kind ?? 'project') !== 'reference')
+  const references = list.filter((p) => p.kind === 'reference')
+  return { board, references }
 }

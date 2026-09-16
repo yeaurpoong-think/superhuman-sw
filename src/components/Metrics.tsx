@@ -8,7 +8,7 @@ export function Metrics({ projects }: { projects: ProjectRecord[] }) {
   return (
     <dl className="flex flex-wrap items-end gap-x-12 gap-y-5">
       <div>
-        <dt className="label">서가에 올린 것</dt>
+        <dt className="label">프로젝트</dt>
         <dd className="mt-1.5 font-display text-4xl leading-none text-ink tabular-nums">
           {projects.length}
           <span className="ml-1.5 font-serif text-sm text-muted">권</span>

@@ -15,7 +15,7 @@ import { readFile, readdir, writeFile } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
 import { generateKeyBetween } from 'fractional-indexing'
 import matter from 'gray-matter'
-import { CATEGORIES, parseProject, sortByRank, stageOf } from '../src/lib/schema.ts'
+import { CATEGORIES, KINDS, parseProject, sortByRank, stageOf } from '../src/lib/schema.ts'
 
 const ROOT = resolve(import.meta.dirname, '..')
 const DIR = resolve(ROOT, 'content/projects')
@@ -42,6 +42,11 @@ if (!args.title) {
 
 if (args.category && !CATEGORIES.includes(args.category)) {
   console.error(`분류는 ${CATEGORIES.join(' · ')} 중 하나여야 한다. 애매하면 아예 빼라.`)
+  process.exit(1)
+}
+
+if (args.kind && !KINDS.includes(args.kind)) {
+  console.error(`kind는 ${KINDS.join(' · ')} 중 하나여야 한다.`)
   process.exit(1)
 }
 
@@ -122,6 +127,7 @@ const frontmatter = {
   id,
   title: args.title,
   rank,
+  kind: args.kind ?? 'project',
   category: args.category ?? null,
   tags: args.tags ? args.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
   sources: args.url.map((url) => ({ url, type: args.type ?? sourceType(url) })),

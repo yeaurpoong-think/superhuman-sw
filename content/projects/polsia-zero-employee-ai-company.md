@@ -2,6 +2,7 @@
 id: polsia-zero-employee-ai-company
 title: Polsia — 직원 0명, AI가 회사를 통째로 운영하는 스타트업
 rank: a0
+category: business
 tags: [ai-startup, 1인창업, 에이전틱ai, 자동화]
 sources:
   - url: https://www.instagram.com/p/DdStjWZnxY0/
