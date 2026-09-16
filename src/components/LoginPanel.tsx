@@ -47,7 +47,7 @@ export function LoginPanel({ admin, onSignIn, onSignOut }: Props) {
       setPassword('')
       setOpen(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : '들어가지 못했다')
+      setError(err instanceof Error ? err.message : '들어가지 못했습니다')
     } finally {
       setBusy(false)
     }
@@ -81,7 +81,7 @@ export function LoginPanel({ admin, onSignIn, onSignOut }: Props) {
       </label>
 
       <p className="mt-2.5 text-[11px] leading-relaxed text-muted">
-        비밀번호로 잠긴 금고를 연다. 처음 한 번은 1~2초 걸린다.
+        비밀번호로 잠긴 금고를 엽니다. 처음 한 번은 1~2초 걸립니다.
       </p>
 
       {error && <p className="mt-2 text-[11px] text-red-600">{error}</p>}

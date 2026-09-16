@@ -24,7 +24,7 @@ export function ReferenceShelf({ projects, onOpen }: Props) {
         </span>
       </header>
       <p className="mt-3 text-[13px] leading-relaxed text-muted">
-        리서치 자료로 만든 것들을 실행 여부와 무관하게 쭉 보관해 두는 곳이다.
+        리서치 자료로 만든 것들을 실행 여부와 무관하게 쭉 보관해 두는 곳입니다.
       </p>
       <div className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
         {sorted.map((p) => (

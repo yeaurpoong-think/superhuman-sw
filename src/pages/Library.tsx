@@ -8,7 +8,7 @@ import { NewProject } from '../components/NewProject'
 import { ReferenceShelf } from '../components/ReferenceShelf'
 import { SaveStatus } from '../components/SaveStatus'
 import { SchemaErrors } from '../components/SchemaErrors'
-import { REPO } from '../config'
+import { LIBRARY_BG, REPO } from '../config'
 import { filterByCategory, partitionByKind } from '../lib/schema'
 import {
   bringToFront,
@@ -49,6 +49,19 @@ export function Library() {
 
   return (
     <div className="px-3 pb-4 md:px-6 md:pb-10">
+      {/*
+        종이 뒤로 비치는 서가. 스크롤 중 잔상을 남기지 않도록 배경 이미지가 아니라
+        고정 레이어로 깐다. 위쪽 메뉴 글자가 이 위에 그대로 앉으므로 어둡게 눌러 둔다.
+      */}
+      <div aria-hidden className="fixed inset-0 -z-10 bg-shell">
+        <div
+          className="absolute inset-0 bg-cover bg-top bg-no-repeat opacity-40"
+          style={{ backgroundImage: `url(${LIBRARY_BG})` }}
+        />
+        {/* 맨 위는 더 눌러 둔다. 메뉴 글자가 사진의 밝은 서가에 걸리면 읽히지 않는다. */}
+        <div className="absolute inset-0 bg-gradient-to-b from-shell/90 via-shell/50 to-shell/65" />
+      </div>
+
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:border focus:border-rule focus:bg-leaf focus:px-3 focus:py-2 focus:text-sm focus:text-ink"
@@ -65,7 +78,7 @@ export function Library() {
             서고
           </h1>
           <p className="mt-3 font-serif text-sm text-ink-soft md:text-base">
-            리서치에서 시작해 직접 해보고, 콘텐츠로 끝맺는다.
+            리서치에서 시작해 직접 해보고, 콘텐츠로 끝맺습니다.
           </p>
 
           <div aria-hidden className="mx-auto mt-7 h-px w-16 bg-accent/50" />
@@ -91,7 +104,7 @@ export function Library() {
           <SchemaErrors errors={board.contentErrors} />
           {boardCards.length === 0 && references.length === 0 && board.projects.length > 0 ? (
             <div className="border border-dashed border-rule py-16 text-center">
-              <p className="font-serif text-ink-soft">이 분류에는 아직 꽂힌 것이 없다.</p>
+              <p className="font-serif text-ink-soft">이 분류에는 아직 꽂힌 것이 없습니다.</p>
               <button
                 type="button"
                 onClick={() => setCategory('all')}
@@ -117,7 +130,7 @@ export function Library() {
             {REPO.owner} / {REPO.repo}
           </span>
           {board.admin && (
-            <span className="label">카드를 끌어 옮기면 날짜가 기록되고 서고에 반영된다</span>
+            <span className="label">카드를 끌어 옮기면 날짜가 기록되고 서고에 반영됩니다</span>
           )}
         </footer>
       </div>

@@ -41,3 +41,9 @@ export const HERO_BEATS = {
   /** 펼친 종이가 화면을 덮음 */
   covered: 0.95,
 } as const
+
+/**
+ * 서고 페이지 바탕. 종이 뒤로 비치는 서가 사진이다.
+ * 글은 종이 위에 있으므로 바탕은 어둡게 눌러 두고 질감만 남긴다.
+ */
+export const LIBRARY_BG = '/superhuman-sw/library-bg.jpg'

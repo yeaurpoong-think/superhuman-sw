@@ -54,7 +54,7 @@ function RichEditor({ value, onChange, onUploadImage, onUploadError, onUploading
               view.dispatch(view.state.tr.replaceSelectionWith(node))
             }
           } catch (e) {
-            onUploadError?.(e instanceof Error ? e.message : '이미지를 올리지 못했다')
+            onUploadError?.(e instanceof Error ? e.message : '이미지를 올리지 못했습니다')
           } finally {
             onUploadingChange?.(false)
           }
@@ -152,7 +152,7 @@ function RawEditor({ value, onChange, onUploadImage, onUploadError, onUploadingC
         const markdown = urls.map((u) => `![](${u})`).join('\n')
         onChange(`${value.slice(0, at)}${markdown}${value.slice(target.selectionEnd)}`)
       } catch (err) {
-        onUploadError?.(err instanceof Error ? err.message : '이미지를 올리지 못했다')
+        onUploadError?.(err instanceof Error ? err.message : '이미지를 올리지 못했습니다')
       } finally {
         onUploadingChange?.(false)
       }
@@ -203,10 +203,10 @@ export function Editor({
           {forced ? (
             <>
               <span className="font-medium text-ink">{gate.reason}</span>가 들어 있어 원문
-              그대로 편집한다. 서식 편집기를 쓰면 이 부분이 사라진다.
+              그대로 편집합니다. 서식 편집기를 쓰면 이 부분이 사라집니다.
             </>
           ) : (
-            '본문 · 이미지는 그대로 붙여넣으면 된다'
+            '본문 · 이미지는 그대로 붙여넣으시면 됩니다'
           )}
         </p>
         {!forced && (

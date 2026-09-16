@@ -7,7 +7,7 @@ export function SchemaErrors({ errors }: { errors: ContentError[] }) {
   return (
     <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
       <h2 className="text-sm font-medium text-red-900">
-        형식이 어긋난 파일 {errors.length}개 — 보드에 올라가지 않았다
+        형식이 어긋난 파일 {errors.length}개 — 보드에 올라가지 않았습니다
       </h2>
       <ul className="mt-2 space-y-1.5">
         {errors.map((e) => (

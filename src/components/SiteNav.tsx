@@ -44,7 +44,9 @@ export function SiteNav({ route, onNavigate }: Props) {
                 aria-current={current ? 'page' : undefined}
                 title={ROUTE_TITLES[item.route]}
                 className={`label flex min-h-11 items-center border-b-2 px-3 ${
-                  current ? 'border-paper text-paper' : 'border-transparent hover:text-paper'
+                  current
+                    ? 'border-paper text-paper'
+                    : 'border-transparent text-paper/75 hover:text-paper'
                 }`}
               >
                 {item.label}
