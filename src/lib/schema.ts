@@ -34,8 +34,10 @@ export const CATEGORY_LABELS: Record<Category, string> = {
 /**
  * 카드 종류. `project`는 리서치→실행→콘텐츠 칸반을 따라가는 프로젝트 카드(기본값).
  * `reference`는 칸반을 타지 않는 참고 자료 — 그냥 쌓아 두는 서가다.
+ * `beauty_insight`도 칸반을 타지 않는다 — 뷰티/화장품 업계 인사이트만 모아 서고
+ * 맨 아래에 따로 쌓는 칸이다.
  */
-export const KINDS = ['project', 'reference'] as const
+export const KINDS = ['project', 'reference', 'beauty_insight'] as const
 export type Kind = (typeof KINDS)[number]
 
 /** 계약에 없는 키는 버리지 않고 그대로 보존한다. 에이전트가 남긴 메모를 앱이 삼키면 안 된다. */
@@ -136,12 +138,14 @@ export function sortByRank<T extends { rank?: string; id: string }>(list: T[]): 
   })
 }
 
-/** 칸반 보드에 올릴 것과 참고 자료 서가에 놓을 것을 가른다. */
+/** 칸반 보드·참고 자료 서가·뷰티 인사이트 서가로 셋을 가른다. */
 export function partitionByKind<T extends { kind?: Kind }>(list: T[]): {
   board: T[]
   references: T[]
+  beautyInsights: T[]
 } {
-  const board = list.filter((p) => (p.kind ?? 'project') !== 'reference')
+  const board = list.filter((p) => (p.kind ?? 'project') === 'project')
   const references = list.filter((p) => p.kind === 'reference')
-  return { board, references }
+  const beautyInsights = list.filter((p) => p.kind === 'beauty_insight')
+  return { board, references, beautyInsights }
 }

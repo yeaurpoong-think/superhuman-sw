@@ -33,7 +33,7 @@ const RULES = [
 ]
 
 export function Home({ onNavigate }: Props) {
-  const { board, references } = partitionByKind(projects)
+  const { board, references, beautyInsights } = partitionByKind(projects)
   const published = board.filter((p) => stageOf(p) === 'content').length
   const average = averageLeadTimeDays(board)
 
@@ -45,7 +45,7 @@ export function Home({ onNavigate }: Props) {
       label: '서가에 꽂힌 것',
       value: projects.length,
       unit: '권',
-      note: '프로젝트와 참고 자료를 합한 수',
+      note: '프로젝트·참고 자료·뷰티 인사이트를 합한 수',
     },
     {
       label: '콘텐츠로 끝맺은 것',
@@ -55,9 +55,9 @@ export function Home({ onNavigate }: Props) {
     },
     {
       label: '참고 자료',
-      value: references.length,
+      value: references.length + beautyInsights.length,
       unit: '건',
-      note: '칸반을 타지 않고 보관만 하는 것',
+      note: '칸반을 타지 않고 보관만 하는 것 (뷰티 인사이트 포함)',
     },
   ]
 

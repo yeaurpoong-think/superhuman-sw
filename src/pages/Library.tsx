@@ -1,5 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from 'react'
 import { useBoard } from '../admin/useBoard'
+import { BeautyInsightShelf } from '../components/BeautyInsightShelf'
 import { Board } from '../components/Board'
 import { CategoryFilter, type CategoryFilterValue } from '../components/CategoryFilter'
 import { LoginPanel } from '../components/LoginPanel'
@@ -33,7 +34,7 @@ export function Library() {
 
   const front = frontWindow(windows)
   const visible = filterByCategory(board.projects, category)
-  const { board: boardCards, references } = partitionByKind(visible)
+  const { board: boardCards, references, beautyInsights } = partitionByKind(visible)
 
   const viewport = () => ({ width: window.innerWidth, height: window.innerHeight })
 
@@ -110,7 +111,10 @@ export function Library() {
 
         <main id="main" className="mt-8">
           <SchemaErrors errors={board.contentErrors} />
-          {boardCards.length === 0 && references.length === 0 && board.projects.length > 0 ? (
+          {boardCards.length === 0 &&
+          references.length === 0 &&
+          beautyInsights.length === 0 &&
+          board.projects.length > 0 ? (
             <div className="border border-dashed border-rule py-16 text-center">
               <p className="font-serif text-ink-soft">{tie('이 분류에는 아직 꽂힌 것이 없습니다.')}</p>
               <button
@@ -131,6 +135,7 @@ export function Library() {
           )}
 
           <ReferenceShelf projects={references} onOpen={openCard} />
+          <BeautyInsightShelf projects={beautyInsights} onOpen={openCard} />
         </main>
 
         <footer className="mt-14 flex flex-wrap items-center justify-between gap-2 border-t border-rule-soft pt-5">
