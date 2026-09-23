@@ -12,6 +12,7 @@ import {
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { ProjectRecord } from '../content'
 import { STAGES, STAGE_LABELS, countsByStage, sortByRank, stageOf, type Stage } from '../lib/schema'
 import { Card } from './Card'
@@ -141,7 +142,18 @@ export function Board({ projects, editable, onMove, onOpen }: Props) {
       onDragCancel={() => setDragging(null)}
     >
       {grid}
-      <DragOverlay>{dragging ? <Card project={dragging} draggable /> : null}</DragOverlay>
+      {/*
+        드래그 중 카드는 반드시 body 로 포탈시킨다.
+        서고 판(.sheet)에 backdrop-filter 가 걸려 있는데, backdrop-filter 가 있는
+        조상 안에서는 position:fixed 자식의 좌표 기준이 "화면"이 아니라
+        그 조상 자신으로 바뀐다(CSS 스펙 동작). DragOverlay 는 내부적으로
+        position:fixed 로 마우스를 쫓아가므로, 포탈 없이는 마우스 좌표와
+        카드 위치가 어긋나 보인다. document.body 에 그리면 이 문제가 사라진다.
+      */}
+      {createPortal(
+        <DragOverlay>{dragging ? <Card project={dragging} draggable /> : null}</DragOverlay>,
+        document.body,
+      )}
     </DndContext>
   )
 }
